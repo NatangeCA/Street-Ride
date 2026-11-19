@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.14 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.15 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -472,7 +472,7 @@
 <button id="miniShow">🗺 map</button>
 
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.14</span></b><span style="flex:1"></span><button id="btnFs">⛶ auto</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.15</span></b><span style="flex:1"></span><button id="btnFs">⛶ auto</button><button id="toggle">hide</button></div>
 
   <h3>Connect</h3>
   <div id="riderCtl"></div>
@@ -640,7 +640,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.14';
+const APP_VER='1.15';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -2136,7 +2136,7 @@ function gsUi(){
     if(b._mode!==want||(av&&b._pic!==GS.pic)){ b._mode=want; b._pic=GS.pic; b.classList.toggle('gsav',!!av); b.innerHTML=av?'<img src="'+esc(GS.pic)+'" alt="Google account" referrerpolicy="no-referrer" width="24" height="24">':b._orig; }
     b.setAttribute('aria-pressed',GS.on?'true':'false'); b.classList.toggle('busy',GS.busy); b.classList.toggle('err',GS.on&&GS.err&&!GS.busy);
     b.title=!GS.on?'Sync your route history and profiles across devices with your Google account (private to you, kept in your own Drive). Shift-click to change the client ID.':
-      GS.busy?'Syncing…':GS.err?'Sync paused: tap to sign in to Google again':'Sync is on'+(GS.last?' · last '+new Date(GS.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'')+'. Tap to turn off.'; });
+      GS.busy?'Syncing…':GS.err?'Sync problem: '+(GS.msg||'tap to sign in again'):'Sync is on'+(GS.last?' · last '+new Date(GS.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'')+'. Tap to turn off.'; });
 }
 function gsLoadLib(){ return new Promise((ok,no)=>{ if(window.google&&google.accounts&&google.accounts.oauth2) return ok(); const sc=document.createElement('script'); sc.src='https://accounts.google.com/gsi/client'; sc.onload=ok; sc.onerror=()=>no(new Error('Could not reach Google (offline?)')); document.head.appendChild(sc); }); }
 async function gsToken(interactive){
@@ -2171,6 +2171,7 @@ async function gsSync(interactive){
     await gsToken(interactive);
     if(!GS.pic){ try{ const u=await (await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+GS.tok}})).json(); if(u&&u.picture){ GS.pic=u.picture; store.set('sr_gpic',GS.pic); gsUi(); } }catch(e){} }
     const files=await gsList(), byName={}; files.forEach(f=>{ byName[f.name]=f; });
+    const nRemoteRides=files.filter(f=>/^ride_/.test(f.name)).length; dlog('sync','Drive has '+nRemoteRides+' rides, profiles.json '+(byName['profiles.json']?'yes':'no'));
     // deletions (kept as a small list so every device learns about them)
     const tomb=gsTombs(); if(byName['deleted.json']){ try{ Object.assign(tomb,await gsGet(byName['deleted.json'].id),gsTombs()); }catch(e){} }
     let nUp=0,nDown=0;
@@ -2199,10 +2200,10 @@ async function gsSync(interactive){
       else if(f.modifiedTime!==rec.gsM&&rec.gsM){ const rm=await gsGet(f.id); await hTx('readwrite',st=>st.put({...rm,gsT:Date.now(),gsM:f.modifiedTime})); nDown++; }
       else if(!rec.gsM){ await hTx('readwrite',st=>st.put({...rec,gsT:Date.now(),gsM:f.modifiedTime})); } }
     for(const f of files){ const m=/^ride_(.+)\.json$/.exec(f.name); if(!m||local[m[1]]||tomb[m[1]]||!byName[f.name]) continue; const rm=await gsGet(f.id); if(!rm||!rm.id) continue; await hTx('readwrite',st=>st.put({...rm,gsT:Date.now(),gsM:f.modifiedTime})); nDown++; }
-    GS.last=Date.now(); store.set('sr_glast',GS.last); GS.err=false;
+    GS.last=Date.now(); store.set('sr_glast',GS.last); GS.err=false; GS.msg=''; dlog('sync','Done: sent '+nUp+', received '+nDown+', profiles now '+profList().length);
     if(nDown){ await loadHistMeta(); if(typeof histOn!=='undefined'&&histOn) refreshHist(); }
-    if(interactive||nUp||nDown) toast('Synced with Google · '+nUp+' sent, '+nDown+' received',3500);
-  }catch(e){ console.error(e); GS.err=true; if(interactive) toast('Google sync: '+e.message,6000); }
+    if(interactive||nUp||nDown) toast('Synced with Google · '+nUp+' sent, '+nDown+' received · Drive holds '+nRemoteRides+' rides, '+profList().length+' profile'+(profList().length===1?'':'s')+(nDown&&!nUp&&R.every(x=>!x.profileId)?'. Pick your profile in Profile ⚙.':''),6000);
+  }catch(e){ console.error(e); GS.err=true; const em=String(e.message||e); dlog('sync','ERROR '+em); if(interactive||GS.msg!==em) toast('Google sync: '+em+(/403/.test(em)?' (is the Google Drive API enabled in your Google Cloud project?)':''),8000); GS.msg=em; }
   GS.busy=false; gsUi();
 }
 function gsToggle(e){
