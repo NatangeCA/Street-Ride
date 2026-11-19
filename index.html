@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.09 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.11 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -472,7 +472,7 @@
 <button id="miniShow">🗺 map</button>
 
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.09</span></b><span style="flex:1"></span><button id="btnFs">⛶ auto</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.11</span></b><span style="flex:1"></span><button id="btnFs">⛶ auto</button><button id="toggle">hide</button></div>
 
   <h3>Connect</h3>
   <div id="riderCtl"></div>
@@ -481,15 +481,14 @@
   <select id="nPlayers" style="display:none"><option value="1">1 rider</option><option value="2">2 riders (split screen)</option></select>
   <div id="swapInfo" style="opacity:.75;font-size:12px"></div>
   <details id="mpDet" class="rdet"><summary><svg class="wifi" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8.8a15 15 0 0 1 20 0"/><path d="M5.5 12.5a10 10 0 0 1 13 0"/><path d="M9 16.1a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg> Group ride online</summary>
-    <div style="margin:2px 0"><a href="https://natangeca.github.io/Street-Ride/" id="gcLink" style="font-size:12px;color:var(--teal-lt)">🔗 Copy invite link</a></div>
-    <div id="gcSign" style="margin:6px 0"><div id="gcBtn"></div><div id="gcWho" style="display:none;font-size:12px"><span id="gcEmail"></span> <button class="lnk" id="gcOut">sign out</button></div></div>
+    <div id="gcBtn" style="margin:6px 0"></div>
     <div id="gcMain" style="display:none">
-      <div style="font-size:12px;opacity:.75;margin:2px 0">Friends' Google emails (commas, spaces or Enter between them). Both of you add each other.</div>
-      <textarea id="gcFriends" rows="2" placeholder="emma@gmail.com, sam@gmail.com" style="width:100%;box-sizing:border-box;font-size:12px"></textarea>
       <div id="gcChips"></div>
-      <div class="grow"><button class="main alt" id="gcHost">Host group ride</button></div>
+      <textarea id="gcFriends" rows="2" placeholder="Friends' emails to invite: emma@gmail.com, sam@gmail.com" style="width:100%;box-sizing:border-box;font-size:12px;margin-top:4px"></textarea>
+      <div class="grow"><button class="main alt" id="gcHost">Host group ride</button><button class="main alt" id="gcShare">Share app</button></div>
     </div>
     <div id="mpStatus" style="font-size:12px;color:#fc8;margin-top:4px">Not connected.</div>
+    <div id="gcWho" style="display:none;font-size:12px;margin-top:4px;opacity:.85">Signed in as <span id="gcEmail"></span> · <button class="lnk" id="gcOut">sign out</button></div>
     <details id="gcSetupDet" style="margin-top:4px"><summary style="font-size:12px;opacity:.8;cursor:pointer">Setup (once)</summary>
       <div style="font-size:12px;opacity:.75;margin:4px 0">Paste your Firebase web config and your Google client ID. Friends opening your hosted copy don't need this.</div>
       <textarea id="gcCfg" rows="4" style="width:100%;box-sizing:border-box;font-size:11px" placeholder='apiKey: "...", databaseURL: "https://...firebasedatabase.app", and the client ID ...apps.googleusercontent.com'></textarea><button class="main" id="gcCfgSave">Save setup</button>
@@ -640,7 +639,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.09';
+const APP_VER='1.11';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -662,7 +661,7 @@ window.addEventListener('error',e=>dlog('ERROR',(e.message||'')+' @'+(e.filename
 window.addEventListener('unhandledrejection',e=>dlog('ERROR','promise: '+((e.reason&&e.reason.message)||e.reason)));
 const say = t => { $('msg').textContent = t; dlog('say',t); };
 let _toastT=null; function toast(t,ms){ let e=$('srToast'); if(!e){ e=document.createElement('div'); e.id='srToast'; document.body.appendChild(e); } e.textContent=t; e.classList.add('on'); clearTimeout(_toastT); _toastT=setTimeout(()=>e.classList.remove('on'),ms||4500); }
-const DEFAULT_MAPILLARY_TOKEN='';   // <- paste your Mapillary client token between the quotes to make it the default for everyone
+const DEFAULT_MAPILLARY_TOKEN='MLY|26691681723862261|16eb8dc362cc453aefed351ceeecc8b8';   // <- paste your Mapillary client token between the quotes to make it the default for everyone
 const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
 
 /* ---------- constants & helpers ---------- */
@@ -1701,7 +1700,7 @@ async function gcExchange(cred){
 function gcUi(){
   const ready=gcReady(), on=!!gcSt.user;
   $('gcBtn').style.display=(ready&&!on)?'block':'none'; $('gcWho').style.display=on?'block':'none'; $('gcEmail').textContent=gcSt.email; $('gcMain').style.display=on?'block':'none';
-  $('gcSetupDet').open=!ready||$('gcSetupDet').open;
+  $('gcSetupDet').style.display=ready?'none':'';  if(!ready) $('gcSetupDet').open=true;
   if(!ready) mpStat('Group ride needs the one-time setup below (or use a code).');
   const hb=$('gcHost'); hb.textContent=mp.hosting?'Stop hosting':'Host group ride'; hb.classList.toggle('red',!!mp.hosting);
   gcChips();
@@ -1715,9 +1714,9 @@ async function gcRenderBtn(){
   google.accounts.id.renderButton($('gcBtn'),{theme:'outline',size:'medium',text:'signin_with',shape:'pill'}); gcSt.btn=true;
 }
 function gcChips(){
-  const box=$('gcChips'); if(!box) return; const mine=new Set(gcEmails()), now=Date.now();
-  const hosts=Object.entries(gcSt.inv).filter(([k,v])=>v&&v.email&&mine.has(v.email)&&now-(v.t||0)<6*3600e3);
-  box.innerHTML=hosts.map(([k,v])=>`<button class="main ${mp.sess&&mp.sess.host===k?'':'alt'}" data-h="${esc(k)}" style="margin:3px 4px 0 0">${mp.sess&&mp.sess.host===k?'✓ ':'● '}${esc(v.name||v.email)} is hosting</button>`).join('');
+  const box=$('gcChips'); if(!box) return; const now=Date.now();
+  const hosts=Object.entries(gcSt.inv).filter(([k,v])=>v&&v.email&&now-(v.t||0)<6*3600e3);
+  box.innerHTML=!hosts.length?'<div style="font-size:12px;opacity:.65;margin:2px 0">No one is hosting right now.</div>':hosts.map(([k,v])=>`<button class="main ${mp.sess&&mp.sess.host===k?'':'alt'}" data-h="${esc(k)}" style="margin:3px 4px 0 0">${mp.sess&&mp.sess.host===k?'✓ ':'● '}${esc(v.name||v.email)} is hosting</button>`).join('');
   box.querySelectorAll('button').forEach(b=>{ b.onclick=()=>gcJoinToggle(b.dataset.h); });
 }
 async function gcPublish(){                         // host: tell each listed friend, and open the session
@@ -1813,7 +1812,10 @@ async function copyShare(e){
   try{ await navigator.clipboard.writeText(u); toast('Link copied: '+u,3000); }
   catch(err){ const t=document.createElement('textarea'); t.value=u; document.body.appendChild(t); t.select(); try{ document.execCommand('copy'); toast('Link copied: '+u,3000); }catch(e2){ toast(u,6000); } t.remove(); }
 }
-$('ptitle').addEventListener('click',copyShare); $('gcLink').addEventListener('click',copyShare);
+$('ptitle').addEventListener('click',copyShare);
+$('gcShare').addEventListener('click',async e=>{ const u=/^https?:$/.test(location.protocol)&&!/localhost|127\.0\.0\.1/.test(location.hostname)?location.origin+location.pathname:SHARE_URL;
+  if(navigator.share){ try{ await navigator.share({title:'Street-Ride',text:'Ride together on Street-Ride',url:u}); return; }catch(err){ if(err&&err.name==='AbortError') return; } }
+  copyShare(e); });
 $('gcCfgSave').onclick=gcSaveCfg; $('gcHost').onclick=gcHostToggle;
 $('gcOut').onclick=async()=>{ try{ if(mp.hosting) await gcStopHosting(); else if(mp.sess) await gcLeave(); }catch(e){} clearInterval(gcSt.timer); Object.assign(gcSt,{user:null,email:'',tok:null,ref:''}); store.set('sr_gref',''); store.set('sr_gemail',''); GS.pic=''; store.set('sr_gpic',''); gsUi(); gcSt.btn=false; gcUi(); gcRenderBtn(); };
 $('gcFriends').value=store.get('sr_friends')||'';
