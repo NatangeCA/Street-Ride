@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.11 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.14 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -472,7 +472,7 @@
 <button id="miniShow">🗺 map</button>
 
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.11</span></b><span style="flex:1"></span><button id="btnFs">⛶ auto</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.14</span></b><span style="flex:1"></span><button id="btnFs">⛶ auto</button><button id="toggle">hide</button></div>
 
   <h3>Connect</h3>
   <div id="riderCtl"></div>
@@ -539,6 +539,7 @@
       Trainer resistance and speeds are a simulation, not a prescription. Ride within your limits.</div>
     </details>
     <details id="dbgDet"><summary>Debug log</summary>
+      <div style="margin:4px 0;font-size:12px"><a href="https://github.com/NatangeCA/Street-Ride/upload/main" target="_blank" rel="noopener" style="color:var(--teal-lt)">🔗 Upload a new version to GitHub</a></div>
       <div class="hint" style="opacity:.85">A running record of what the app is doing (requests, routes, Bluetooth, errors). Your Mapillary token is never included. After a problem, press Copy and paste it to Natange's helper.</div>
       <div class="grow"><button class="main alt" id="dbgCopy">Copy</button><button class="main alt" id="dbgSave">Save .txt</button><button class="main alt" id="dbgClear">Clear</button></div>
       <pre id="dbgOut"></pre>
@@ -639,7 +640,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.11';
+const APP_VER='1.14';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -2177,18 +2178,27 @@ async function gsSync(interactive){
     for(const id of Object.keys(tomb)){ if(local[id]){ await hTx('readwrite',st=>st.delete(id)); delete local[id]; nDown++; } const f=byName['ride_'+id+'.json']; if(f){ await gsApi('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE'}); delete byName['ride_'+id+'.json']; } }
     store.set('sr_gdel',JSON.stringify(tomb));
     const tj=JSON.stringify(tomb); if(Object.keys(tomb).length){ const r=await gsPut('deleted.json',tomb,byName['deleted.json']&&byName['deleted.json'].id); byName['deleted.json']={id:r.id,name:'deleted.json'}; }
+    // profiles: union, newest edit wins
+    const loc=profAll(), pf=byName['profiles.json']; let rem=[]; if(pf){ try{ rem=await gsGet(pf.id); }catch(e){} }
+    const mp={}; [...rem,...loc].forEach(p=>{ if(!mp[p.id]||(p.u||0)>(mp[p.id].u||0)) mp[p.id]=p; });
+    const merged0=Object.values(mp);
+    // same name on two devices = same person: keep one profile (the oldest id), fold the others into it
+    const grp={}, remap={}; merged0.filter(p=>!p.del&&p.name).forEach(p=>{ const k=p.name.trim().toLowerCase(); (grp[k]=grp[k]||[]).push(p); });
+    Object.values(grp).forEach(g=>{ if(g.length<2) return; g.sort((x,y)=>x.id<y.id?-1:1); const w=g[0], nw=g.slice().sort((x,y)=>(y.u||0)-(x.u||0))[0];
+      Object.assign(w,{gear:nw.gear,mass:nw.mass,ftp:nw.ftp,u:Date.now()}); g.slice(1).forEach(p=>{ remap[p.id]=w.id; p.del=true; p.alias=w.id; p.u=Date.now(); }); });
+    if(Object.keys(remap).length){
+      for(const id of Object.keys(local)){ const rec=local[id]; if(rec.pid&&remap[rec.pid]){ const nr={...rec,pid:remap[rec.pid],mod:Date.now()}; local[id]=nr; await hTx('readwrite',st=>st.put(nr)); nDown++; } }
+      R.forEach(r=>{ if(r.profileId&&remap[r.profileId]) r.profileId=remap[r.profileId]; });
+    }
+    const merged=merged0, same=(a,b)=>JSON.stringify([...a].sort((x,y)=>x.id<y.id?-1:1))===JSON.stringify([...b].sort((x,y)=>x.id<y.id?-1:1));
+    if(!same(merged,loc)){ profSave(merged); refreshProfSelects(); }
+    if(!pf||!same(merged,rem)) await gsPut('profiles.json',merged,pf&&pf.id);
     // rides: new ones go up, new ones come down, edits (favourite, name) follow the newest change
     for(const id of Object.keys(local)){ const rec=local[id], f=byName['ride_'+id+'.json'];
       if(!f||((rec.mod||0)>(rec.gsT||0))){ const r=await gsPut('ride_'+id+'.json',rec,f&&f.id); await hTx('readwrite',st=>st.put({...rec,gsT:Date.now(),gsM:r.modifiedTime})); nUp++; }
       else if(f.modifiedTime!==rec.gsM&&rec.gsM){ const rm=await gsGet(f.id); await hTx('readwrite',st=>st.put({...rm,gsT:Date.now(),gsM:f.modifiedTime})); nDown++; }
       else if(!rec.gsM){ await hTx('readwrite',st=>st.put({...rec,gsT:Date.now(),gsM:f.modifiedTime})); } }
     for(const f of files){ const m=/^ride_(.+)\.json$/.exec(f.name); if(!m||local[m[1]]||tomb[m[1]]||!byName[f.name]) continue; const rm=await gsGet(f.id); if(!rm||!rm.id) continue; await hTx('readwrite',st=>st.put({...rm,gsT:Date.now(),gsM:f.modifiedTime})); nDown++; }
-    // profiles: union, newest edit wins
-    const loc=profAll(), pf=byName['profiles.json']; let rem=[]; if(pf){ try{ rem=await gsGet(pf.id); }catch(e){} }
-    const mp={}; [...rem,...loc].forEach(p=>{ if(!mp[p.id]||(p.u||0)>(mp[p.id].u||0)) mp[p.id]=p; });
-    const merged=Object.values(mp), same=(a,b)=>JSON.stringify([...a].sort((x,y)=>x.id<y.id?-1:1))===JSON.stringify([...b].sort((x,y)=>x.id<y.id?-1:1));
-    if(!same(merged,loc)){ profSave(merged); refreshProfSelects(); }
-    if(!pf||!same(merged,rem)) await gsPut('profiles.json',merged,pf&&pf.id);
     GS.last=Date.now(); store.set('sr_glast',GS.last); GS.err=false;
     if(nDown){ await loadHistMeta(); if(typeof histOn!=='undefined'&&histOn) refreshHist(); }
     if(interactive||nUp||nDown) toast('Synced with Google · '+nUp+' sent, '+nDown+' received',3500);
