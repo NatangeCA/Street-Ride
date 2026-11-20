@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.48 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.51 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -54,7 +54,7 @@
   .hrline b{font-size:20px;line-height:1.1;min-width:34px;text-align:right;}
   .hrline span{font-size:11px;opacity:.75;}
   .hrline .hrh{color:#ff8a7a;opacity:1;font-size:14px;}
-  #srToast{white-space:pre-line;text-align:center;position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:60;max-width:min(92vw,520px);background:var(--clay);color:#fff;border:1px solid var(--clay-lt);border-radius:10px;padding:10px 16px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .25s;}
+  #srToast{white-space:pre-line;text-align:center;position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:60;max-width:min(88vw,440px);background:rgba(58,26,18,.9);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:500;box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .25s;}
   #srToast.on{opacity:1;}
   .gtop{display:flex;align-items:baseline;gap:6px;}
   .gtop b{font-size:26px;line-height:1;min-width:48px;}
@@ -516,7 +516,7 @@
 
 <div id="tut" role="dialog" aria-modal="true" aria-label="Quick tour"><div class="card"><div class="tic" id="tutIc"></div><h3 id="tutH"></h3><div id="tutB"></div><div class="dots" id="tutD"></div><div class="row"><button class="lnk" id="tutSkip">Skip</button><button class="lnk" id="tutBack">Back</button><button class="main" id="tutNext">Next</button></div></div></div>
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.48</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.51</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
 
   <h3 class="hq">Connect<button id="tutQ" type="button" title="Quick tour" aria-label="Quick tour">?</button></h3>
   <div id="riderCtl"></div>
@@ -567,7 +567,7 @@
     <div style="opacity:.6;margin-bottom:4px">Street-Ride v1.03 · by Natange</div>
     <button class="main alt" id="btnInstall" style="display:none">⬇ Install as an app</button>
     <div>Keys: F full screen · M minimap · Space start/pause · ↑ / ↓ gears (Rider 2: W / S)</div>
-    <div>Screen kept awake: <span id="wakeStatus">checking…</span></div>
+    <div style="display:none">Screen kept awake: <span id="wakeStatus"></span></div>
     <div class="tgl" id="hillRow" title="A 'gear down' tone about 10 seconds before a climb"><span>△ Hill warning sound</span><span style="flex:1"></span><input type="checkbox" id="hillCue" checked hidden><button class="sw" id="hillSw" role="switch" aria-checked="true" aria-label="Hill warning sound"></button></div>
     <details id="tokDet"><summary>Mapillary token</summary><input type="password" id="token" placeholder="MLY|...|... (client token)"></details>
     <details id="bkDet"><summary>Back up &amp; restore</summary>
@@ -587,7 +587,7 @@
     </details>
     <details id="dbgDet"><summary>Debug log</summary>
       <div style="margin:4px 0;font-size:12px"><a href="https://github.com/NatangeCA/Street-Ride/upload/main" target="_blank" rel="noopener" style="color:var(--teal-lt)">🔗 Upload a new version to GitHub</a></div>
-      <div class="hint" style="opacity:.85">A running record of what the app is doing (requests, routes, Bluetooth, errors). Your Mapillary token is never included. After a problem, press Copy and paste it to Natange's helper.</div>
+      <div class="hint" style="opacity:.85">A running record of what the app is doing (requests, routes, Bluetooth, errors). Your Mapillary token is never included.</div>
       <div class="grow"><button class="main alt" id="dbgCopy">Copy</button><button class="main alt" id="dbgSave">Save .txt</button><button class="main alt" id="dbgClear">Clear</button></div>
       <pre id="dbgOut"></pre>
     </details>
@@ -687,7 +687,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.48';
+const APP_VER='1.51';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -708,7 +708,7 @@ function dbgRender(){ const o=document.getElementById('dbgOut'); if(!o) return; 
 window.addEventListener('error',e=>dlog('ERROR',(e.message||'')+' @'+(e.filename||'').split('/').pop()+':'+e.lineno));
 window.addEventListener('unhandledrejection',e=>dlog('ERROR','promise: '+((e.reason&&e.reason.message)||e.reason)));
 const say = t => { $('msg').textContent = t; dlog('say',t); };
-let _toastT=null; function toast(t,ms){ let e=$('srToast'); if(!e){ e=document.createElement('div'); e.id='srToast'; document.body.appendChild(e); } e.textContent=t; e.classList.add('on'); clearTimeout(_toastT); _toastT=setTimeout(()=>e.classList.remove('on'),ms||4500); }
+let _toastT=null; function toast(t,ms){ let e=$('srToast'); if(!e){ e=document.createElement('div'); e.id='srToast'; document.body.appendChild(e); } e.textContent=t; e.classList.add('on'); clearTimeout(_toastT); _toastT=setTimeout(()=>e.classList.remove('on'),Math.min(ms||2800,6000)); }
 const DEFAULT_MAPILLARY_TOKEN='MLY|26691681723862261|16eb8dc362cc453aefed351ceeecc8b8';   // <- paste your Mapillary client token between the quotes to make it the default for everyone
 const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
 
@@ -735,6 +735,8 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const MLY_POOL={n:0,q:[],pause:0}; let FJ_GEN=0;     // bump FJ_GEN to drop every queued photo-service request (a search that was cancelled or abandoned)
 async function mlySlot(){ if(MLY_POOL.n>=6) await new Promise(r=>MLY_POOL.q.push(r)); MLY_POOL.n++; const w=MLY_POOL.pause-Date.now(); if(w>0) await new Promise(r=>setTimeout(r,w)); }
 function mlyFree(){ MLY_POOL.n--; const r=MLY_POOL.q.shift(); if(r) r(); }
+let _mlyF=0,_mlyT=0;
+function btHint(m){ m=String(m||''); if(/cancel|denied|NotAllowed/i.test(m)) return 'Bluetooth permission was declined. Allow Bluetooth for this site, then tap Pair again.'; if(/adapter|powered|not available|turned off/i.test(m)) return 'Turn Bluetooth on for this device, then tap Pair again.'; if(/timed out|network|attempt failed|GATT|disconnected|failed/i.test(m)) return 'could not connect. Close other apps using it (phone app, Zwift), switch the device off and on, then tap Pair again.'; return m+'. Switch the device off and on, then tap Pair again.'; }
 const RATE_MSG='The photo service is limiting requests because too many were sent in a short time. Wait about a minute and press Build again.';
 async function fetchJson(u,ms=8000,tries=3){
   let T0=Date.now(); const pooled=/graph\.mapillary\.com/.test(u), short=dbgClean(u).replace(/^https?:\/\//,'').replace(/fields=[^&]*&?/,'').replace(/(\d+\.\d{4})\d+/g,'$1').slice(0,100);
@@ -755,11 +757,12 @@ async function fetchJson(u,ms=8000,tries=3){
           throw new Error('rate');
         }
         if(rs.status>=500) throw new Error('busy');
-        const jj=await rs.json(); dlog('http',(Date.now()-T0)+'ms ok '+short+' -> '+(jj&&jj.data?jj.data.length+' items':(jj&&jj.error?'error '+(jj.error.message||''):Object.keys(jj||{}).join(',')))); return jj;
+        const jj=await rs.json(); _mlyF=0; dlog('http',(Date.now()-T0)+'ms ok '+short+' -> '+(jj&&jj.data?jj.data.length+' items':(jj&&jj.error?'error '+(jj.error.message||''):Object.keys(jj||{}).join(',')))); return jj;
       }
       catch(e){
         if(e.message==='cancelled') throw e;
         if(e.message!=='rate') dlog('http','FAIL '+(e.name==='AbortError'?'timeout':e.message)+' '+(Date.now()-T0)+'ms '+short);
+        if(e.message!=='cancelled'&&/mapillary/.test(short)){ _mlyF++; if(_mlyF>=2&&Date.now()-_mlyT>20000){ _mlyT=Date.now(); say('Street photos are slow right now, still trying…'); } }
         if(e.message==='rate') throw new Error(RATE_MSG);
         if(a>=tries-1) throw new Error('A map or photo service did not answer ('+(e.name==='AbortError'?'timed out':'too many requests, or the connection dropped')+'). Zoom in to a smaller area, wait a few seconds and press Build again.');
         await new Promise(r=>setTimeout(r,700*(a+1)));
@@ -1469,7 +1472,7 @@ async function pickPair(r){
   let kind=null;
   let srv=null, lastE=null;
   for(let t=0;t<3&&!srv;t++){ try{ srv=await Promise.race([dev.gatt.connect(),new Promise((_,j)=>setTimeout(()=>j(new Error('timed out connecting')),12000))]); }catch(e){ lastE=e; try{ dev.gatt.disconnect(); }catch(_){} await new Promise(q=>setTimeout(q,800)); } }
-  if(!srv){ const m=(lastE&&lastE.message)||'connection failed'; say(r.name+': '+m); toast(r.name+': could not connect to '+(dev.name||'that device')+'.\n'+m+'\nClose other apps using it (phone, Zwift), switch it off and on, then tap Pair again.',9000); return false; }
+  if(!srv){ const m=(lastE&&lastE.message)||'connection failed'; say(r.name+' · '+(dev.name||'device')+': '+btHint(m)); return false; }
   try{ await srv.getPrimaryService(0x1826); kind='t'; }catch(e){ try{ await srv.getPrimaryService(0x180D); kind='h'; }catch(e2){} }
   if(!kind){ try{ dev.gatt.disconnect(); }catch(e){} say((dev.name||'That device')+' is not a trainer or heart-rate sensor Street-Ride can use yet.'); return false; }
   const old=kind==='t'?r.trainer.dev:r.hrDev; if(old&&old!==dev&&old.gatt&&old.gatt.connected){ try{ old.gatt.disconnect(); }catch(e){} }
@@ -1809,7 +1812,7 @@ async function gcHostToggle(){
     if(mp.hosting){ await gcStopHosting(); return; }
     if(mp.sess) await gcLeave();
     if(!await gcPublish()) return;
-    dlog('group','hosting for '+mp.hostFriends.join(', ')); mp.hosting=true; mp.sess={host:me}; mp.joinT=Date.now(); mpStat('Hosting. Waiting for friends to join…'); gcUi();
+    dlog('group','hosting for '+mp.hostFriends.join(', ')); try{ keepAwake(); }catch(e){} mp.hosting=true; mp.sess={host:me}; mp.joinT=Date.now(); mpStat('Hosting. Waiting for friends to join…'); gcUi();
     if(S.route) mpSendRoute();
   }catch(e){ mpStat('Host: '+e.message); }
 }
@@ -1825,9 +1828,9 @@ async function gcLeave(){
 }
 async function gcJoinToggle(hostKey){
   try{
-    if(mp.sess&&mp.sess.host===hostKey&&!mp.hosting){ if(!openPeers().length&&Date.now()-(mp.joinT||0)<25000){ toast('Still linking with the host, give it a few seconds…',2500); return; } await gcLeave(); return; }
+    if(mp.sess&&mp.sess.host===hostKey&&!mp.hosting){ if(!openPeers().length&&Date.now()-(mp.joinT||0)<25000){ say('Still linking with the host, give it a few seconds…'); return; } await gcLeave(); return; }
     if(mp.hosting) await gcStopHosting(); else if(mp.sess) await gcLeave();
-    const name=R[0].name||'Rider', me=gcKey(gcSt.email); dlog('group','joining '+hostKey); mp.joinT=Date.now(); mp.sess={host:hostKey}; mp.tried={};
+    const name=R[0].name||'Rider', me=gcKey(gcSt.email); dlog('group','joining '+hostKey); try{ keepAwake(); }catch(e){} mp.joinT=Date.now(); mp.sess={host:hostKey}; mp.tried={};
     await gcDb('sess/'+hostKey+'/members/'+me,'PUT',{name,j:mp.joinT,t:Date.now(),pic:picOf(R[0].profileId)||GS.pic||''});
     mpStat('Joining…'); gcUi(); gcTick();
   }catch(e){ mp.sess=null; mpStat('Join: '+e.message); gcUi(); }
@@ -2330,7 +2333,7 @@ async function gsSyncOne(a,interactive){
     if(GS.fresh!=null){ const i=GS.fresh; GS.fresh=null; const rr=R[i]; if(rr&&!(profList().some(p=>p.id===rr.profileId))){ const first=profList().find(p=>p.sync===true&&p.acct===a); if(first){ chooseProfile(i,first.id); toast('Loaded your synced profile “'+first.name+'”. Change it in the Profile list if that is not you.',6000); } else { const np=profCreate(i,true), a2=profAll(), q=a2.find(x=>x.id===np.id); q.acct=a; if(GS.pic) q.pic=GS.pic; profSave(a2); gsSoon(); } } }
     GS.last=Date.now(); A.last=GS.last; store.set('sr_glast',GS.last); A.err=false; A.msg=''; dlog('sync',a+': done, sent '+nUp+', received '+nDown);
     if(nDown){ await loadHistMeta(); if(typeof histOn!=='undefined'&&histOn) refreshHist(); }
-    if(interactive) toast('Synced with '+a+' · '+nUp+' sent, '+nDown+' received · Drive holds '+nRemoteRides+' rides',6000);
+    if(interactive) say('Synced with '+a+' · '+nUp+' sent, '+nDown+' received');
   }catch(e){ console.error(e); A.err=true; const em=String(e.message||e); dlog('sync','ERROR '+em); if(interactive) toast('Google sync: '+em,8000); A.msg=em; if(!GS.tok) A.tok=null; }
 }
 async function gsLinkProfile(i,email,A){
@@ -2365,10 +2368,10 @@ $('rhead0')&&R.forEach(r=>{ const h=$('rhead'+r.i); if(!h) return; h.style.curso
   const p=gsProf(r.i);
   if(!(GS.on&&p&&p.sync===true)){ toast('Turn on Sync for this profile in Profile ⚙ to keep it backed up and signed in.',4500); return; }
   if(!p.acct){                                         // synced before accounts were remembered: sign in once to link it
-    toast('Signing in to Google…',2500); GS.busy=true; GS.cur=''; gsUi(); let email='';
+    say('Signing in to Google…'); GS.busy=true; GS.cur=''; gsUi(); let email='';
     try{ const s=await gsSignIn(''); email=s.email; GS.busy=false; if(!await gsLinkProfile(r.i,email,s.A)) email=''; }catch(err){ toast('Google sync: '+(err&&err.message||err),8000); }
     GS.busy=false; gsUi(); if(email) gsSync(true,email); return; }
-  const A=gsAcct(p.acct); toast(gsValid(A)?'Syncing…':'Signing back in to Google…',2500); gsSync(true,p.acct); }); });
+  const A=gsAcct(p.acct); say(gsValid(A)?'Syncing…':'Signing back in to Google…'); gsSync(true,p.acct); }); });
 gsUi();
 if(GS.on&&!store.get('sr_gmig16')){ store.set('sr_gmig16','1'); const all=profAll(), mine=store.get('sr_prof0'); all.forEach(p=>{ if(p.sync===undefined&&!p.del){ p.sync=(p.id===mine); p.u=Date.now(); } }); profSave(all); }
 if(GS.on&&GS.cid){ setTimeout(()=>gsSync(false),2500); setInterval(()=>{ if(!document.hidden) gsSync(false); },300000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&Date.now()-GS.last>60000) gsSync(false); }); }
@@ -2950,6 +2953,9 @@ async function updateImagery(r){
     const c=S.route.cam, target=clamp(r.pos+8,0,S.route.total);
     let lo=0,hi=c.length-1; while(hi-lo>1){ const m=(lo+hi)>>1; if(c[m].d<=target) lo=m; else hi=m; }
     const node=(target-c[lo].d<=c[hi].d-target)?c[lo]:c[hi];
+    { const gl=c[hi].d-c[lo].d, far=Math.min(target-c[lo].d,c[hi].d-target);   // between two photos that are far apart
+      if(gl>60&&far>25&&target>c[lo].d&&target<c[hi].d){ if(!r.gap){ r.gap=true; say('No street photos for about '+(Math.round(gl/10)*10)+' m. Keep pedaling, the view picks up again soon.'); } }
+      else if(r.gap&&far<=12){ r.gap=false; say('Photos are back.'); } }
     r.hdg=pointAt(r.pos+15).hdg;
     if(r.lastImg!==node.id){ r.lastImg=node.id; r.viewer.moveTo(node.id).catch(()=>{}); }
     else if(r.lastImage&&angDiff(r.hdg,r.aimedHdg!=null?r.aimedHdg:r.hdg)>30) aimCamera(r,r.lastImage);
@@ -2967,7 +2973,7 @@ async function updateImagery(r){
       if(r.gap){ r.gap=false; say('Photos are back.'); }
       if(r.lastImg!==im.id){ r.lastImg=im.id; r.lastSeq=im.seq; r.viewer.moveTo(im.id).catch(()=>{}); }
       else if(r.lastImage&&angDiff(p.hdg,r.aimedHdg!=null?r.aimedHdg:p.hdg)>25) aimCamera(r,r.lastImage);
-    }else if(!r.gap){ r.gap=true; say('No photos on this stretch. Keeping the last picture while you ride on.'); }
+    }else if(!r.gap){ r.gap=true; say('No street photos on this stretch. Keep pedaling, the view picks up again soon.'); }
   }catch(err){ say(err.message); }
   r.lookupBusy=false;
 }
@@ -3018,7 +3024,7 @@ async function connectTrainer(r,devIn,quiet){
   let dev=devIn;
   try{
     dev=dev||await navigator.bluetooth.requestDevice({filters:[{services:[0x1826]}]});
-    if(!dev._srTr){ dev._srTr=1; dev.addEventListener('gattserverdisconnected',()=>{ r.trainer.connected=false; r.trainer.ctrl=null; devUpdate(r); say(r.name+': trainer disconnected. Tap Pair to reconnect.'); toast(r.name+': trainer disconnected. Tap Pair to reconnect.',5000); }); }
+    if(!dev._srTr){ dev._srTr=1; dev.addEventListener('gattserverdisconnected',()=>{ r.trainer.connected=false; r.trainer.ctrl=null; devUpdate(r); say(r.name+': trainer disconnected. Tap Pair to reconnect.'); }); }
     let lastE=null;
     for(let a=0;a<3;a++){
       try{ await setupTrainer(r,dev,quiet?5000:12000); lastE=null; break; }
@@ -3028,7 +3034,7 @@ async function connectTrainer(r,devIn,quiet){
     r._ergOn=false; if(r.trainer.ctrl){ ftmsWrite(r,[0x00]); ftmsWrite(r,[0x07]); }
     r.lastSent=null; r.tgtGrade=null; r.trainer.lastErr=null;
     r.trainer.dev=dev; r.trainer.devName=dev.name||'Trainer'; devSave(i,'t',dev); devUpdate(r);
-    if(r.trainer.noCtrl) toast(r.name+': '+(dev.name||'trainer')+' is connected for power and cadence only. It did not offer resistance control.',7000);
+    if(r.trainer.noCtrl) say(r.name+': '+(dev.name||'trainer')+' is connected for power and cadence only (no resistance control).');
     say(r.name+': trainer connected. Close any other app controlling it.');
     if((ergWant||r.ergW)&&r.trainer.ctrl&&!r.ftpTest) setTimeout(()=>{ if(r.trainer.connected) ergHold(r.i); },800);       // ERG was on: this rider joins (or resumes after a drop)
     return true;
@@ -3036,7 +3042,7 @@ async function connectTrainer(r,devIn,quiet){
     const msg=(err&&err.message)||String(err); if(r.trainer) r.trainer.lastErr=msg;
     try{ if(dev&&dev.gatt&&dev.gatt.connected) dev.gatt.disconnect(); }catch(e){}
     if(err&&err.name==='NotFoundError') return false;
-    if(!quiet){ say(r.name+' trainer: '+msg); toast(r.name+': could not connect to '+((dev&&dev.name)||'the trainer')+'.\n'+msg+'\nClose other apps using it (phone, Zwift), switch the trainer off and on, then tap Pair again.',9000); }
+    if(!quiet){ say(r.name+' · '+((dev&&dev.name)||'trainer')+': '+btHint(msg)); }
     return false;
   }
 }
@@ -3976,12 +3982,13 @@ async function keepAwake(){
   if(wl) return;
   try{
     wl=await navigator.wakeLock.request('screen');
-    wl.addEventListener('release',()=>{ wl=null; $('wakeStatus').textContent='released (will re-lock)'; });
+    wl.addEventListener('release',()=>{ wl=null; $('wakeStatus').textContent='released (will re-lock)'; setTimeout(()=>{ if(document.visibilityState==='visible') keepAwake(); },1000); });
     $('wakeStatus').textContent='yes ✔';
   }catch(e){ wl=null; $('wakeStatus').textContent='could not lock ('+e.name+')'; }
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') keepAwake(); });
 for(const evn of ['click','keydown']) document.addEventListener(evn,()=>keepAwake(),{once:true});
+setInterval(()=>{ if(!wl&&document.visibilityState==='visible') keepAwake(); },20000);   // phones sometimes drop it: take it back
 keepAwake();
 
 /* ---------- full screen ---------- */
@@ -4036,7 +4043,7 @@ async function mergeSameNameProfiles(){
   const noBt=!navigator.bluetooth, ios=/iPhone|iPad|iPod/.test(navigator.userAgent);
   const T=[
     ['<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3fd0cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3.5"/><circle cx="18" cy="17" r="3.5"/><path d="M6 17l4-8h5l3 8M10 9l-1-3H7"/></svg>','Welcome to Street-Ride','Ride in street view anywhere on earth. This quick tour takes 20 seconds, and you can skip it any time.'],
-    ['<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3fd0cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>','Connect your gear','Pair your smart trainer and heart rate monitor with <span class="tchip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg> Pair</span>, then make your profile under <span class="tchip">Profile <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.7 7.7 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6a7.3 7.3 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.7 7.7 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg></span>.'+((noBt||ios)?'<div class="note">This browser cannot use Bluetooth. On iPhone or iPad, open this page in the free <b>Bluefy</b> app. On Android or a computer, use Chrome.</div>':'')],
+    ['<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3fd0cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>','Connect your gear','Pair your smart trainer and heart rate monitor with <span class="tchip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg> Pair</span>, then make your profile under <span class="tchip">Profile <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.7 7.7 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6a7.3 7.3 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.7 7.7 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg></span>.'],
     ['<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3fd0cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>','Pick a route and pedal','Get started fast with <span class="tchip">Quick route</span> or choose your own path on the <span class="tchip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg> Map</span>. Then start pedaling!'],
     ['<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3fd0cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 10a4 4 0 0 1 0 8H7z"/></svg>','Ride with friends','Sync your Google profile to ride with friends online from any device.'],
     ['<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3fd0cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>','Track your progress','Measure your performance over time with an <span class="tchip">FTP test</span> and <span class="tchip">Stats</span> trends, or cruise at steady power in <span class="tchip">ERG</span> mode.']
