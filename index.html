@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.44 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.46 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -516,7 +516,7 @@
 
 <div id="tut" role="dialog" aria-modal="true" aria-label="Quick tour"><div class="card"><div class="tic" id="tutIc"></div><h3 id="tutH"></h3><div id="tutB"></div><div class="dots" id="tutD"></div><div class="row"><button class="lnk" id="tutSkip">Skip</button><button class="lnk" id="tutBack">Back</button><button class="main" id="tutNext">Next</button></div></div></div>
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.44</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.46</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
 
   <h3 class="hq">Connect<button id="tutQ" type="button" title="Quick tour" aria-label="Quick tour">?</button></h3>
   <div id="riderCtl"></div>
@@ -687,7 +687,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.44';
+const APP_VER='1.46';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -1648,7 +1648,7 @@ const openPeers=()=>Object.values(mp.peers).filter(peerOpen);
 const mpOpen=()=>openPeers().length>0;
 let _lastMs=''; const mpStat=t=>{ $('mpStatus').textContent=t; if(t!==_lastMs){ _lastMs=t; dlog('group',t); } };
 const MAXRIDERS=8;
-function waitIce(pc,ms=6000){ return new Promise(res=>{ if(pc.iceGatheringState==='complete') return res(); const f=()=>{ if(pc.iceGatheringState==='complete'){ pc.removeEventListener('icegatheringstatechange',f); res(); } }; pc.addEventListener('icegatheringstatechange',f); setTimeout(res,ms); }); }
+function waitIce(pc,ms=3500){ return new Promise(res=>{ if(pc.iceGatheringState==='complete') return res(); const f=()=>{ if(pc.iceGatheringState==='complete'){ pc.removeEventListener('icegatheringstatechange',f); res(); } }; pc.addEventListener('icegatheringstatechange',f); pc.addEventListener('icecandidate',e=>{ if(e.candidate&&/ typ (srflx|relay) /.test(e.candidate.candidate)) setTimeout(res,600); }); setTimeout(res,ms); }); }
 function mpStatus(){ const n=openPeers().length; mpStat(n?('Riding with '+openPeers().map(p=>p.name).join(', ')+'.'):(mp.sess?'Waiting for riders…':(gcSt.user?'Not connected.':'Not connected.'))); }
 function peerClose(id){ const P=mp.peers[id]; if(!P) return; try{ if(P.dc) P.dc.close(); }catch(e){} try{ if(P.pc) P.pc.close(); }catch(e){} delete mp.peers[id]; if(!Object.keys(mp.peers).length) clearInterval(mp.timer); mpStatus(); }
 function mpReset(){ Object.keys(mp.peers).forEach(peerClose); clearInterval(mp.timer); mp.code=null; $('mpOutWrap').style.display='none'; $('mpInWrap').style.display='none'; $('mpOut').value=''; $('mpIn').value=''; }
@@ -1658,7 +1658,7 @@ function peerNew(id,name,role){
   const P={id,name:name||'Friend',role,pc:new RTCPeerConnection(RTC_CFG),dc:null,remote:null,made:Date.now()}; mp.peers[id]=P;
   P.pc.oniceconnectionstatechange=()=>dlog('group','link with '+P.name+': ice '+P.pc.iceConnectionState);
   P.pc.onicecandidateerror=e=>dlog('group','ICE error '+(e&&e.errorCode)+' '+(e&&e.errorText||''));
-  P.pc.onconnectionstatechange=()=>{ const st=P.pc.connectionState; dlog('group','link with '+P.name+': '+st); if(st==='failed'){ mpStat('Could not link with '+P.name+' directly (a network may block it). The others stay connected.'); peerClose(id); } else if(st==='disconnected'||st==='closed'){ if(mp.peers[id]===P){ P.remote=null; mpStatus(); } } };
+  P.pc.onconnectionstatechange=()=>{ const st=P.pc.connectionState; dlog('group','link with '+P.name+': '+st); if(st==='failed'){ mpStat('Could not link with '+P.name+' directly (a network may block it). The others stay connected.'); peerClose(id); } else if(st==='disconnected'||st==='closed'){ if(mp.peers[id]===P){ P.remote=null; mpStatus(); if(st==='disconnected') setTimeout(()=>{ if(mp.peers[id]===P&&P.pc.connectionState!=='connected'){ dlog('group','link with '+P.name+' did not recover: redialling'); peerClose(id); } },8000); } } };
   return P;
 }
 function peerWire(P,dc){
@@ -1790,7 +1790,7 @@ async function gcRenderBtn(){
 function gcChips(){
   const box=$('gcChips'); if(!box) return; const now=Date.now();
   const hosts=Object.entries(gcSt.inv).filter(([k,v])=>v&&v.email&&now-(v.t||0)<6*3600e3);
-  box.innerHTML=!hosts.length?'<div style="font-size:12px;opacity:.65;margin:2px 0">No one is hosting right now.</div>':hosts.map(([k,v])=>`<button class="main ${mp.sess&&mp.sess.host===k?'':'alt'}" data-h="${esc(k)}" style="margin:3px 4px 0 0">${mp.sess&&mp.sess.host===k?'✓ ':''}${avHtml(v.name||v.email,v.pic,18)}${esc(v.name||v.email)} is hosting</button>`).join('');
+  box.innerHTML=!hosts.length?'<div style="font-size:12px;opacity:.65;margin:2px 0">No one is hosting right now.</div>':hosts.map(([k,v])=>`<button class="main ${mp.sess&&mp.sess.host===k?'':'alt'}" data-h="${esc(k)}" style="margin:3px 4px 0 0">${mp.sess&&mp.sess.host===k?(openPeers().length?'✓ ':'… '):''}${avHtml(v.name||v.email,v.pic,18)}${esc(v.name||v.email)} is hosting</button>`).join('');
   box.querySelectorAll('button').forEach(b=>{ b.onclick=()=>gcJoinToggle(b.dataset.h); });
   if(mp.sess&&gcSt.members){ box.insertAdjacentHTML('beforeend','<div style="margin:4px 0;font-size:12px">'+Object.entries(gcSt.members).filter(([k,v])=>v&&Date.now()-(v.t||0)<60000).map(([k,v])=>'<span style="display:inline-block;background:var(--surface);border-radius:12px;padding:2px 8px 2px 3px;margin:2px 4px 2px 0">'+avHtml(v.name,v.pic,16)+esc(v.name||'Rider')+'</span>').join('')+'</div>'); }
 }
@@ -1825,7 +1825,7 @@ async function gcLeave(){
 }
 async function gcJoinToggle(hostKey){
   try{
-    if(mp.sess&&mp.sess.host===hostKey&&!mp.hosting){ await gcLeave(); return; }
+    if(mp.sess&&mp.sess.host===hostKey&&!mp.hosting){ if(!openPeers().length&&Date.now()-(mp.joinT||0)<25000){ toast('Still linking with the host, give it a few seconds…',2500); return; } await gcLeave(); return; }
     if(mp.hosting) await gcStopHosting(); else if(mp.sess) await gcLeave();
     const name=R[0].name||'Rider', me=gcKey(gcSt.email); dlog('group','joining '+hostKey); mp.joinT=Date.now(); mp.sess={host:hostKey}; mp.tried={};
     await gcDb('sess/'+hostKey+'/members/'+me,'PUT',{name,j:mp.joinT,t:Date.now(),pic:picOf(R[0].profileId)||GS.pic||''});
@@ -1844,7 +1844,7 @@ async function gcTick(){
     const me=gcKey(gcSt.email); gcSt.fails=0;
     { const iv=(await gcDb('inv/'+me))||{}; const n=Object.keys(iv).length; if(n!==gcSt._n){ gcSt._n=n; dlog('group','invites for me: '+n); } gcSt.inv=iv; } gcChips();
     if(mp.sess){
-      const h=mp.sess.host, mem=(await gcDb('sess/'+h+'/members'))||{}, now=Date.now(); gcSt.members=mem; { const k=Object.keys(mem).join(','); if(k!==gcSt._mk){ gcSt._mk=k; dlog('group','riders in the ride: '+k); } } gcChips();
+      const h=mp.sess.host, now=Date.now(); let mem; try{ mem=(await gcDb('sess/'+h+'/members'))||{}; }catch(er){ if(/\b40[13]\b/.test(er.message)&&!mp.hosting){ if(now-(mp.joinT||0)>12000){ dlog('group','the host\'s ride is closed'); mp.sess=null; mpStat('The host ended the ride.'); gcUi(); } gcSt.busy=false; return; } throw er; } gcSt.members=mem; { const k=Object.keys(mem).join(','); if(k!==gcSt._mk){ gcSt._mk=k; dlog('group','riders in the ride: '+k); } } gcChips();
       if(mp.sess&&!mp.hosting&&!openPeers().length&&mem[me]&&Object.keys(mp.peers).length) mpStat('Linking with the host…');
       if(!mem[me]){ if(!mp.hosting&&now-(mp.joinT||0)>12000){ dlog('group','the host\'s list no longer has me: ride ended'); mp.sess=null; mpStat('The host ended the ride.'); gcUi(); } }
       else{
@@ -1852,7 +1852,7 @@ async function gcTick(){
         for(const [k,v] of Object.entries(mem)){
           if(k===me||mp.peers[k]||now-(v.t||0)>60000) continue;
           if((v.j||0)>mp.joinT||((v.j||0)===mp.joinT&&k>me)) continue;                 // the newer rider makes the call
-          if(mp.tried[k]&&now-mp.tried[k]<25000) continue; mp.tried[k]=now; await gcOffer(k,v.name);
+          if(mp.tried[k]&&now-mp.tried[k]<12000) continue; mp.tried[k]=now; await gcOffer(k,v.name);
         }
       }
     }
