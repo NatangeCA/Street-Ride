@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.35 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.39 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -412,6 +412,21 @@
   #grip{display:none;position:sticky;bottom:-10px;margin:6px -10px -10px;height:24px;flex-direction:column;align-items:center;justify-content:center;gap:4px;touch-action:none;cursor:grab;-webkit-tap-highlight-color:transparent;border-radius:0 0 14px 14px;background:linear-gradient(to bottom,rgba(40,18,12,0),rgba(40,18,12,.95) 55%);}
   #grip i{display:block;width:30px;height:2.5px;border-radius:2px;background:rgba(255,230,215,.55);}
   #grip.drag i{background:rgba(255,230,215,.95);}
+  #tut{display:none;position:fixed;inset:0;z-index:3000;background:rgba(10,5,3,.78);align-items:center;justify-content:center;padding:16px;}
+  #tut.on{display:flex;}
+  #tut .card{width:min(380px,100%);background:rgba(40,18,12,.98);border:1px solid var(--line);border-radius:18px;padding:22px 20px 16px;box-shadow:0 12px 40px rgba(0,0,0,.5);text-align:center;touch-action:pan-y;}
+.tchip{display:inline-flex;align-items:center;gap:5px;background:rgba(63,208,204,.16);border:1px solid rgba(63,208,204,.4);border-radius:8px;padding:1px 8px;font-weight:600;white-space:nowrap;}
+  .tchip svg{display:block;}
+  #tut .tic{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;background:rgba(63,208,204,.14);display:flex;align-items:center;justify-content:center;font-size:26px;}
+  #tut h3{margin:0 0 8px;font-size:19px;}
+  #tut p{margin:0 0 6px;font-size:14px;line-height:1.45;opacity:.9;}
+  #tut .note{font-size:12.5px;opacity:.75;background:rgba(255,255,255,.06);border-radius:10px;padding:7px 10px;margin-top:8px;}
+  #tut .dots{display:flex;gap:7px;justify-content:center;margin:14px 0 12px;}
+  #tut .dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,230,215,.25);}
+  #tut .dots i.on{background:#3fd0cc;}
+  #tut .row{display:flex;gap:8px;justify-content:space-between;align-items:center;}
+  #tut .row button.lnk{opacity:.8;}
+  #tut .row .main{flex:1;max-width:160px;}
   #grip{display:flex;}
   @media (pointer:fine){ #grip{height:14px;gap:3px;bottom:-12px;margin:2px -12px -12px;} #grip i{width:24px;height:2px;} body #panel.collapsed #grip{height:12px;margin:0 -5px;} }
   body.phone #panel.compact #ptitle{display:none;}
@@ -496,8 +511,9 @@
 <div id="mini"><div id="miniMap"></div><div id="miniCountry"></div><div class="mb"><button id="miniSat" title="Satellite on/off">🛰</button><button id="miniFollow" title="Follow rider / show whole route">⌖</button><button id="miniHide" title="Hide minimap (M)">×</button></div></div>
 <button id="miniShow">🗺 map</button>
 
+<div id="tut" role="dialog" aria-modal="true" aria-label="Quick tour"><div class="card"><div class="tic" id="tutIc"></div><h3 id="tutH"></h3><div id="tutB"></div><div class="dots" id="tutD"></div><div class="row"><button class="lnk" id="tutSkip">Skip</button><button class="lnk" id="tutBack">Back</button><button class="main" id="tutNext">Next</button></div></div></div>
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.35</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.39</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
 
   <h3>Connect</h3>
   <div id="riderCtl"></div>
@@ -531,7 +547,7 @@
 
   <h3>Plan</h3>
   <div id="qrRow"><button class="main teal" id="btnQuick" title="A flat ride, start to finish, somewhere in the world chosen for you. The little box on the right sets the distance (2 to 9 km).">🎲 Quick route</button><label id="qrBox" title="Approximate distance in km (2 to 9)"><span>~</span><input id="qrKm" type="text" inputmode="numeric" maxlength="1" value="6" aria-label="Quick route distance in km"><span>km</span></label></div>
-  <div class="navrow" style="margin:3px 0"><button class="main alt" id="btnSetup" style="margin:0">🗺 Route</button><button class="main alt" id="btnStats" style="margin:0">♥︎ Stats</button></div>
+  <div class="navrow" style="margin:3px 0"><button class="main alt" id="btnSetup" style="margin:0">🗺 Map</button><button class="main alt" id="btnStats" style="margin:0">♥︎ Stats</button></div>
   <div class="pills"><button class="pill" id="btnPrev" title="Load the route of your most recent ride and stay here">Load previous</button><button class="pill" id="btnFtp" title="Ramp test: finds your FTP with a smart trainer">FTP test</button></div>
   <input type="file" id="routeFile" accept=".gpx,.kml,application/gpx+xml,application/vnd.google-earth.kml+xml" style="display:none">
   <h3>Ride</h3>
@@ -555,14 +571,16 @@
       <div class="hint">Saves a folder with all your rides, stats, routes, profiles, settings and a copy of this app. It never includes your Mapillary token.</div>
       <div class="grow"><button class="main alt" id="bkSave">Back up</button><button class="main alt" id="bkLoad">Restore</button></div>
       <div class="filelinks"><button class="lnk" id="bkZip">save as one .zip</button> · <button class="lnk" id="bkZipIn">restore from .zip</button></div>
+      <div class="filelinks"><button class="lnk" id="bkTour">show the quick tour again</button></div>
       <div class="filelinks"><button class="lnk" id="bkMerge" title="Combine profiles that have the same name into one, and move their rides over. Only runs when you click.">merge profiles with the same name</button></div>
       <input type="file" id="bkDirIn" webkitdirectory multiple style="display:none"><input type="file" id="bkZipFile" accept=".zip,application/zip" style="display:none">
       <div class="hint" id="bkMsg"></div>
     </details>
     <details id="aboutDet"><summary>About &amp; credits</summary>
-      <div class="hint" style="opacity:.85;line-height:1.5">Street-Ride v1.03 by Natange. A free, independent project; not affiliated with or endorsed by Wahoo, Tacx/Garmin, Strava or Mapillary. Product names belong to their owners.<br>
+      <div class="hint" style="opacity:.85;line-height:1.5">Street-Ride <span id="aboutVer"></span> by Natange. A free, independent project; not affiliated with or endorsed by Wahoo, Tacx/Garmin, Strava or Mapillary. Product names belong to their owners.<br>
       Street photos © Mapillary contributors, CC BY-SA 4.0. Maps and routing data © OpenStreetMap contributors (ODbL); map tiles © Esri. Elevation from Open-Meteo.com (CC BY 4.0, Copernicus DEM). Built with Leaflet, mapillary-js and leaflet.vectorgrid.<br>
       Trainer resistance and speeds are a simulation, not a prescription. Ride within your limits.</div>
+      <div class="filelinks" style="margin-top:6px"><button class="lnk" id="abTour">Tutorial</button></div>
     </details>
     <details id="dbgDet"><summary>Debug log</summary>
       <div style="margin:4px 0;font-size:12px"><a href="https://github.com/NatangeCA/Street-Ride/upload/main" target="_blank" rel="noopener" style="color:var(--teal-lt)">🔗 Upload a new version to GitHub</a></div>
@@ -579,7 +597,7 @@
   <div class="side">
     <div class="navrow"><button class="main alt" id="btnCloseSetup">← Back to ride</button><button class="main alt" id="btnSetupStats">♥︎ Go to stats</button></div>
     <button class="main alt" id="btnHist">🕘 Route history</button>
-    <h2>Route</h2>
+    <h2>Map</h2>
     <input type="text" id="qSearch" placeholder="Search a place, press Enter to jump there">
     <div class="two"><button class="main modebtn" id="modeStart" title="Click the map to place the start">① Click = START</button><button class="main modebtn alt" id="modeEnd" title="Click the map to place the finish">② Click = FINISH</button></div>
     <input type="text" id="cStart" placeholder="Start: lat, lng (or place + Enter)">
@@ -626,7 +644,7 @@
 <div id="sum" class="overlay">
   <div class="sumwrap">
     <div class="sumleft">
-      <div class="navrow"><button class="main alt" id="btnCloseSum">← Back to ride</button><button class="main alt" id="btnSumRoute">🗺 Go to Route</button></div>
+      <div class="navrow"><button class="main alt" id="btnCloseSum">← Back to ride</button><button class="main alt" id="btnSumRoute">🗺 Go to Map</button></div>
       <div class="tabs"><button class="tab" id="tabHist">History &amp; trends</button><button class="tab on" id="tabRide">This ride</button></div>
       <div id="rideBlock">
         <h2 id="sumH">Ride summary</h2><div id="sumDate" style="opacity:.8;margin:-4px 0 8px"></div>
@@ -666,7 +684,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.35';
+const APP_VER='1.39';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -3943,6 +3961,40 @@ async function mergeSameNameProfiles(){
   refreshProfSelects(); await loadHistMeta(); if(typeof histOn!=='undefined'&&histOn) refreshHist(); gsSoon();
   msg.textContent='Merged '+Object.keys(remap).length+' duplicate profile'+(Object.keys(remap).length===1?'':'s')+' and moved '+moved+' ride'+(moved===1?'':'s')+'.';
 }
+
+/* ---------- first-run quick tour: shown once, remembered on this device and in synced profiles ---------- */
+(function(){
+  const box=$('tut'); if(!box) return;
+  const noBt=!navigator.bluetooth, ios=/iPhone|iPad|iPod/.test(navigator.userAgent);
+  const T=[
+    ['<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3fd0cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3.5"/><circle cx="18" cy="17" r="3.5"/><path d="M6 17l4-8h5l3 8M10 9l-1-3H7"/></svg>','Welcome to Street-Ride','Ride in street view anywhere on earth. This quick tour takes 20 seconds, and you can skip it any time.'],
+    ['<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3fd0cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>','Connect your gear','Pair your smart trainer and heart rate monitor with <span class="tchip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg> Pair</span>, then make your profile under <span class="tchip">Profile <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.7 7.7 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6a7.3 7.3 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.7 7.7 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg></span>.'+((noBt||ios)?'<div class="note">This browser cannot use Bluetooth. On iPhone or iPad, open this page in the free <b>Bluefy</b> app. On Android or a computer, use Chrome.</div>':'')],
+    ['<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3fd0cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>','Pick a route and pedal','Get started fast with <span class="tchip">Quick route</span> or choose your own path on the <span class="tchip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg> Map</span>. Then start pedaling!'],
+    ['<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3fd0cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.5-9A6 6 0 0 1 18 10a4 4 0 0 1 0 8H7z"/></svg>','Ride with friends','Sync your Google profile to ride with friends online from any device.'],
+    ['<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3fd0cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>','Track your progress','Measure your performance over time with an <span class="tchip">FTP test</span> and <span class="tchip">Stats</span> trends, or cruise at steady power in <span class="tchip">ERG</span> mode.']
+  ];
+  let i=0;
+  const seen=()=>{ try{ return store.get('sr_tut')==='1'; }catch(e){ return false; } };
+  function markSeen(){ try{ store.set('sr_tut','1'); }catch(e){}
+    try{ const all=profAll(); let ch=false; all.forEach(p=>{ if(p.sync===true&&!p.del&&!p.tut){ p.tut=true; p.u=Date.now(); ch=true; } }); if(ch){ profSave(all); if(typeof gsSoon==='function') gsSoon(); } }catch(e){} }
+  function render(){ $('tutIc').innerHTML=T[i][0]; $('tutH').textContent=T[i][1]; $('tutB').innerHTML='<p>'+T[i][2]+'</p>';
+    $('tutD').innerHTML=T.map((x,k)=>'<i'+(k===i?' class="on"':'')+'></i>').join(''); $('tutBack').style.visibility=i?'visible':'hidden'; $('tutNext').textContent=i===T.length-1?'Let\'s ride':'Next'; }
+  function close(){ box.classList.remove('on'); markSeen(); }
+  function open(force){ if(!force&&seen()) return; i=0; render(); box.classList.add('on'); }
+  $('tutNext').onclick=()=>{ if(i<T.length-1){ i++; render(); } else close(); };
+  $('tutBack').onclick=()=>{ if(i>0){ i--; render(); } };
+  $('tutSkip').onclick=close;
+  let x0=null; box.addEventListener('pointerdown',e=>{ x0=e.clientX; }); box.addEventListener('pointerup',e=>{ if(x0==null) return; const dx=e.clientX-x0; x0=null; if(dx<-50&&i<T.length-1){ i++; render(); } else if(dx>50&&i>0){ i--; render(); } });
+  document.addEventListener('keydown',e=>{ if(box.classList.contains('on')&&e.key==='Escape') close(); });
+  window.tutSync=()=>{ try{ if(profList().some(p=>p.sync===true&&p.tut)){ if(!seen()) store.set('sr_tut','1'); box.classList.remove('on'); } }catch(e){} };
+  window.tutShow=()=>open(true);
+  setTimeout(()=>{ try{ tutSync(); }catch(e){} open(false); },1200);
+})();
+{ const g=gsUi; gsUi=function(){ g(); try{ tutSync(); }catch(e){} }; }
+
+$('abTour').onclick=()=>{ try{ tutShow(); }catch(e){} };
+try{ $('aboutVer').textContent='v'+APP_VER; }catch(e){}
+$('bkTour').onclick=()=>{ try{ tutShow(); }catch(e){} };
 $('bkMerge').onclick=()=>mergeSameNameProfiles().catch(e=>{ $('bkMsg').textContent='Merge failed: '+e.message; });
 
 /* monochrome icons: phones draw emoji in their own colours, so swap them for icons that follow the app colours */
