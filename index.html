@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.15 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.16 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -96,6 +96,11 @@
   .rgrid{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 8px;align-items:center;margin:8px 0 2px;}
   .rgrid label,.rgrid .lb{font-size:14px;color:var(--text);}
   .rgrid input{width:100%;box-sizing:border-box;margin:0;}
+  .av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;overflow:hidden;background:var(--teal);color:#06302e;font-weight:700;vertical-align:-4px;margin-right:5px;flex:none;line-height:1;}
+  .av img{width:100%;height:100%;object-fit:cover;display:block;}
+  .pin{width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-sizing:border-box;background:#2a1a14;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font:700 12px system-ui;box-shadow:0 0 0 1px rgba(0,0,0,.4);}
+  .pin img{width:100%;height:100%;object-fit:cover;display:block;}
+  .rgrid select{width:100%;min-width:0;box-sizing:border-box;margin:0;}
   .rgrid .span2{grid-column:2 / 4;}
   .gsb{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px;border-radius:13px;border:1px solid var(--line-2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap;}
   .gsb[aria-pressed="true"]{border-color:var(--teal);color:var(--teal-lt);background:rgba(20,184,166,.12);}
@@ -472,7 +477,7 @@
 <button id="miniShow">🗺 map</button>
 
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.15</span></b><span style="flex:1"></span><button id="btnFs">⛶ auto</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.16</span></b><span style="flex:1"></span><button id="btnFs">⛶ auto</button><button id="toggle">hide</button></div>
 
   <h3>Connect</h3>
   <div id="riderCtl"></div>
@@ -640,7 +645,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.15';
+const APP_VER='1.16';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -758,10 +763,10 @@ for(let i=0;i<2;i++){
   if(i===1) rc.style.display='none';
   rc.innerHTML=`<div class="rhrow"><b id="rhead${i}">Rider ${i+1}</b><button class="lnk" id="profTog${i}" aria-expanded="false" title="Name, gear, weight, FTP and saved profile">Profile <svg class="burg" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.7 7.7 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6a7.3 7.3 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.7 7.7 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg></button></div>
     <div class="rset" id="rset${i}" hidden>
-      <div class="prof"><select id="prof${i}"></select><button class="icob" id="profSave${i}" title="Save profile: saves the name, gear, weight and FTP below. Rides you finish are tracked under this profile." aria-label="Save profile">💾</button><button class="lnk" id="profDel${i}" title="Delete this profile" style="visibility:hidden">delete</button></div>
-      <div class="hint" id="profNote${i}"></div>
+      <div class="hint" id="profHint${i}" style="display:flex;justify-content:space-between;min-height:0"><span id="profNote${i}"></span><button class="lnk" id="profDel${i}" title="Delete this profile" style="visibility:hidden">delete profile</button></div>
       <div class="rgrid">
-        <label for="rname${i}">Name</label><input type="text" id="rname${i}" value="Rider ${i+1}" maxlength="20"><button class="gsb" id="gsb${i}" type="button" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.1.9-4.6l-7.9-6.2A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg><span>Sync</span></button>
+        <label for="prof${i}" id="profLbl${i}">Profile</label><select id="prof${i}"></select><button class="gsb" id="gsb${i}" type="button" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.1.9-4.6l-7.9-6.2A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg><span>Sync</span></button>
+        <label for="rname${i}">Name</label><input type="text" id="rname${i}" value="Rider ${i+1}" maxlength="20"><span></span>
         <label for="ftp${i}">FTP</label><input type="number" id="ftp${i}" value="200" min="50" max="600"><span class="un">W <button class="lnk" id="ftpGo${i}" title="Run a ramp test to find your FTP">test</button></span>
         <label for="ergW${i}" title="Power the ERG button holds, in watts">ERG</label><input type="number" id="ergW${i}" value="120" min="30" max="600" title="Power the ERG button holds, in watts"><span class="un">W</span>
         <label for="mass${i}" title="Input rider and bike weight (match your trainer app)">Weight</label><input type="number" id="mass${i}" value="85" min="40" max="200" title="Input rider and bike weight (match your trainer app)"><span class="un">kg</span>
@@ -803,8 +808,22 @@ $('routeMode').addEventListener('change',e=>store.set('sr_routeMode',e.target.va
 $('token').addEventListener('change',e=>{store.set('mlyToken',e.target.value.trim()); addCoverage();});
 for(const id of ['scale0','scale1']) $(id).addEventListener('input',e=>{ $(id+'Val').textContent=e.target.value; store.set('sr_'+id,e.target.value); });
 for(const id of ['mass0','mass1','ftp0','ftp1','cDist','cDiff']) $(id).addEventListener('change',e=>store.set('sr_'+id,e.target.value));
+const avCache={};
+function avImg(url){ if(!url) return null; let im=avCache[url]; if(!im){ im=new Image(); im.referrerPolicy='no-referrer'; im.src=url; avCache[url]=im; } return (im.complete&&im.naturalWidth)?im:null; }
+const safePic=u=>/^https:\/\/[\w.-]*googleusercontent\.com\//.test(u||'')?u:'';
+function avHtml(name,pic,sz){ sz=sz||18; const ini=String(name||'?').trim().charAt(0).toUpperCase().replace(/[<>&"]/g,''); return '<span class="av" style="width:'+sz+'px;height:'+sz+'px;font-size:'+Math.round(sz*.55)+'px">'+(safePic(pic)?'<img src="'+safePic(pic)+'" referrerpolicy="no-referrer" alt="">':ini)+'</span>'; }
+const picOf=pid=>{ try{ const p=pid&&profAll().find(x=>x.id===pid&&!x.del); return p&&p.pic?p.pic:''; }catch(e){ return ''; } };
+const riderPic=rr=>picOf(rr.profileId);
+function pinIcon(color,name,pic){ return L.divIcon({className:'',html:'<div class="pin" style="border-color:'+color+'">'+(safePic(pic)?'<img src="'+safePic(pic)+'" referrerpolicy="no-referrer" alt="">':esc(String(name||'?').trim().charAt(0).toUpperCase()))+'</div>',iconSize:[26,26],iconAnchor:[13,13]}); }
+function drawPin(ctx,dpr,px,py,color,name,pic){
+  const rad=9*dpr; ctx.save(); ctx.beginPath(); ctx.arc(px,py,rad,0,7); ctx.fillStyle=color; ctx.fill();
+  const im=avImg(safePic(pic));
+  if(im){ ctx.save(); ctx.beginPath(); ctx.arc(px,py,rad-2*dpr,0,7); ctx.clip(); ctx.drawImage(im,px-rad,py-rad,rad*2,rad*2); ctx.restore(); }
+  else{ ctx.fillStyle='#fff'; ctx.font='700 '+(11*dpr)+'px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(String(name||'?').trim().charAt(0).toUpperCase(),px,py+.5*dpr); }
+  ctx.beginPath(); ctx.arc(px,py,rad,0,7); ctx.strokeStyle='#fff'; ctx.lineWidth=2*dpr; ctx.stroke(); ctx.restore();
+}
 function applyNames(){
-  R.forEach(r=>{ const v=$('rname'+r.i).value.trim(); r.name=v||('Rider '+(r.i+1)); $('tag'+r.i).textContent=r.name; let pr=null; try{ pr=r.profileId?profList().find(x=>x.id===r.profileId):null; }catch(e){} $('rhead'+r.i).textContent=pr?pr.name:r.name; });
+  R.forEach(r=>{ const v=$('rname'+r.i).value.trim(); r.name=v||('Rider '+(r.i+1)); const pic=riderPic(r); $('tag'+r.i).innerHTML=avHtml(r.name,pic,16)+esc(r.name); let pr=null; try{ pr=r.profileId?profList().find(x=>x.id===r.profileId):null; }catch(e){} const hn=pr?pr.name:r.name; $('rhead'+r.i).innerHTML=avHtml(hn,pic,18)+esc(hn); const pl=$('profLbl'+r.i); if(pl) pl.innerHTML=avHtml(hn,pic,16)+'Profile'; });
   applySwap();
 }
 function applySwap(){
@@ -1607,7 +1626,7 @@ function peerWire(P,dc){
 const routeKey=()=>{ if(!S.route) return ''; const p=S.route.pts, a=p[0], b=p[p.length-1]; return a.lat.toFixed(3)+','+a.lng.toFixed(3)+'>'+b.lat.toFixed(3)+','+b.lng.toFixed(3); };
 function mpSendState(){
   const ps=openPeers(); if(!ps.length) return; const now=performance.now();
-  const msg=JSON.stringify({k:'st',r:R.slice(0,S.n).map(r=>({n:r.name,p:Math.round(r.pos*10)/10,s:(S.playing&&!r.finished)?Math.round(r.vv*10)/10:0,w:r.trainer.connected&&r.trainer.power!=null?Math.round(r.trainer.power):null,h:hrNow(r,now)})),rk:routeKey()});
+  const msg=JSON.stringify({k:'st',r:R.slice(0,S.n).map(r=>({n:r.name,p:Math.round(r.pos*10)/10,s:(S.playing&&!r.finished)?Math.round(r.vv*10)/10:0,w:r.trainer.connected&&r.trainer.power!=null?Math.round(r.trainer.power):null,h:hrNow(r,now),a:picOf(r.profileId)||GS.pic||''})),rk:routeKey()});
   ps.forEach(P=>{ try{ P.dc.send(msg); }catch(e){} });
 }
 function mpSendRoute(only){
@@ -1622,7 +1641,7 @@ function mpRouteBuilt(){ if(mpOpen()&&(mp.hosting||(mp.code&&mp.code.role==='hos
 async function mpGot(P,m){
   if(m.k==='st'){
     const old=P.remote&&P.remote.rk===m.rk?P.remote.riders:[];
-    P.remote={rk:m.rk,t:performance.now(),riders:(m.r||[]).map((x,i)=>({name:x.n||P.name,pos:x.p,spd:x.s||0,pwr:x.w,hr:x.h,disp:old[i]&&old[i].disp!=null?old[i].disp:x.p}))}; return; }
+    P.remote={rk:m.rk,t:performance.now(),riders:(m.r||[]).map((x,i)=>({name:x.n||P.name,pos:x.p,spd:x.s||0,pwr:x.w,hr:x.h,pic:safePic(x.a),disp:old[i]&&old[i].disp!=null?old[i].disp:x.p}))}; return; }
   if(m.k==='rc'){
     const key=P.id+m.id, b=mp.bufs[key]||(mp.bufs[key]={parts:[],got:0}); if(!b.parts[m.i]){ b.parts[m.i]=m.d; b.got++; }
     if(b.got===m.n){
@@ -1717,15 +1736,16 @@ async function gcRenderBtn(){
 function gcChips(){
   const box=$('gcChips'); if(!box) return; const now=Date.now();
   const hosts=Object.entries(gcSt.inv).filter(([k,v])=>v&&v.email&&now-(v.t||0)<6*3600e3);
-  box.innerHTML=!hosts.length?'<div style="font-size:12px;opacity:.65;margin:2px 0">No one is hosting right now.</div>':hosts.map(([k,v])=>`<button class="main ${mp.sess&&mp.sess.host===k?'':'alt'}" data-h="${esc(k)}" style="margin:3px 4px 0 0">${mp.sess&&mp.sess.host===k?'✓ ':'● '}${esc(v.name||v.email)} is hosting</button>`).join('');
+  box.innerHTML=!hosts.length?'<div style="font-size:12px;opacity:.65;margin:2px 0">No one is hosting right now.</div>':hosts.map(([k,v])=>`<button class="main ${mp.sess&&mp.sess.host===k?'':'alt'}" data-h="${esc(k)}" style="margin:3px 4px 0 0">${mp.sess&&mp.sess.host===k?'✓ ':''}${avHtml(v.name||v.email,v.pic,18)}${esc(v.name||v.email)} is hosting</button>`).join('');
   box.querySelectorAll('button').forEach(b=>{ b.onclick=()=>gcJoinToggle(b.dataset.h); });
+  if(mp.sess&&gcSt.members){ box.insertAdjacentHTML('beforeend','<div style="margin:4px 0;font-size:12px">'+Object.entries(gcSt.members).filter(([k,v])=>v&&Date.now()-(v.t||0)<60000).map(([k,v])=>'<span style="display:inline-block;background:var(--surface);border-radius:12px;padding:2px 8px 2px 3px;margin:2px 4px 2px 0">'+avHtml(v.name,v.pic,16)+esc(v.name||'Rider')+'</span>').join('')+'</div>'); }
 }
 async function gcPublish(){                         // host: tell each listed friend, and open the session
   const me=gcKey(gcSt.email), name=R[0].name||'Rider', fr=gcEmails().filter(e=>e!==gcSt.email);
   if(!fr.length){ mpStat('Add at least one friend email first.'); return false; }
-  await gcDb('sess/'+me+'/members/'+me,'PUT',{name,j:Date.now(),t:Date.now()});
+  const pic=picOf(R[0].profileId)||GS.pic||''; await gcDb('sess/'+me+'/members/'+me,'PUT',{name,j:Date.now(),t:Date.now(),pic});
   const upd={}; fr.forEach(e=>{ upd[gcKey(e)]={name,email:gcSt.email,t:Date.now()}; });
-  await Promise.all(fr.map(e=>gcDb('inv/'+gcKey(e)+'/'+me,'PUT',{name,email:gcSt.email,t:Date.now()})));
+  await Promise.all(fr.map(e=>gcDb('inv/'+gcKey(e)+'/'+me,'PUT',{name,email:gcSt.email,t:Date.now(),pic})));
   mp.hostFriends=fr; return true;
 }
 async function gcHostToggle(){
@@ -1754,7 +1774,7 @@ async function gcJoinToggle(hostKey){
     if(mp.sess&&mp.sess.host===hostKey&&!mp.hosting){ await gcLeave(); return; }
     if(mp.hosting) await gcStopHosting(); else if(mp.sess) await gcLeave();
     const name=R[0].name||'Rider', me=gcKey(gcSt.email); mp.joinT=Date.now(); mp.sess={host:hostKey}; mp.tried={};
-    await gcDb('sess/'+hostKey+'/members/'+me,'PUT',{name,j:mp.joinT,t:Date.now()});
+    await gcDb('sess/'+hostKey+'/members/'+me,'PUT',{name,j:mp.joinT,t:Date.now(),pic:picOf(R[0].profileId)||GS.pic||''});
     mpStat('Joining…'); gcUi(); gcTick();
   }catch(e){ mp.sess=null; mpStat('Join: '+e.message); gcUi(); }
 }
@@ -1769,7 +1789,7 @@ async function gcTick(){
     const me=gcKey(gcSt.email);
     gcSt.inv=(await gcDb('inv/'+me))||{}; gcChips();
     if(mp.sess){
-      const h=mp.sess.host, mem=(await gcDb('sess/'+h+'/members'))||{}, now=Date.now();
+      const h=mp.sess.host, mem=(await gcDb('sess/'+h+'/members'))||{}, now=Date.now(); gcSt.members=mem; gcChips();
       if(!mem[me]){ if(!mp.hosting){ mp.sess=null; mpStat('The host ended the ride.'); gcUi(); } }
       else{
         if(now-gcSt.lastBeat>20000){ gcSt.lastBeat=now; gcDb('sess/'+h+'/members/'+me+'/t','PUT',now).catch(()=>{}); }
@@ -1813,6 +1833,7 @@ async function copyShare(e){
   try{ await navigator.clipboard.writeText(u); toast('Link copied: '+u,3000); }
   catch(err){ const t=document.createElement('textarea'); t.value=u; document.body.appendChild(t); t.select(); try{ document.execCommand('copy'); toast('Link copied: '+u,3000); }catch(e2){ toast(u,6000); } t.remove(); }
 }
+document.addEventListener('click',e=>{ const g=e.target.closest&&e.target.closest('.gbtn'); if(g) profAuto(+g.dataset.r); });
 $('ptitle').addEventListener('click',copyShare);
 $('gcShare').addEventListener('click',async e=>{ const u=/^https?:$/.test(location.protocol)&&!/localhost|127\.0\.0\.1/.test(location.hostname)?location.origin+location.pathname:SHARE_URL;
   if(navigator.share){ try{ await navigator.share({title:'Street-Ride',text:'Ride together on Street-Ride',url:u}); return; }catch(err){ if(err&&err.name==='AbortError') return; } }
@@ -1836,7 +1857,7 @@ function remoteTick(dt){                       // glide each remote marker towar
 function remoteNow(){
   if(!S.route) return null; const riders=[], bad=[]; const rk=routeKey();
   for(const P of Object.values(mp.peers)){ const m=P.remote; if(!m||performance.now()-m.t>8000) continue;
-    if(m.rk!==rk) bad.push(m.riders.map(x=>x.name).join(' & ')); else m.riders.forEach(x=>riders.push({d:clamp(x.disp,0,S.route.total),name:x.name,spd:x.spd,pwr:x.pwr,hr:x.hr})); }
+    if(m.rk!==rk) bad.push(m.riders.map(x=>x.name).join(' & ')); else m.riders.forEach(x=>riders.push({d:clamp(x.disp,0,S.route.total),name:x.name,spd:x.spd,pwr:x.pwr,hr:x.hr,pic:x.pic})); }
   if(!riders.length&&!bad.length) return null;
   return {riders,bad,mismatch:!riders.length&&bad.length>0,name:bad.join(' & ')};
 }
@@ -1847,14 +1868,14 @@ function updateRemote(r){
   el.style.display='block'; el.style.whiteSpace='pre-line';
   if(m.mismatch){ el.style.color='#ffd27d'; el.innerHTML=WIFI_SVG+esc(m.name+' is on a different route (use "Send my route")'); return; }
   el.style.color='#ffd27d';
-  el.innerHTML=(m.bad.length?WIFI_SVG+esc(m.bad.join(' & ')+' on a different route\n'):'')+m.riders.map(x=>{ const dm=r.pos-x.d; return WIFI_SVG+esc(x.name+' · '+(dm>=0?'you lead by ':'behind by ')+Math.abs(Math.round(dm))+' m · '+Math.round(x.spd)+' km/h'+(x.pwr!=null?' · '+x.pwr+' W':'')+(x.hr?' · ♥ '+x.hr:'')); }).join('\n');
+  el.innerHTML=(m.bad.length?WIFI_SVG+esc(m.bad.join(' & ')+' on a different route\n'):'')+m.riders.map(x=>{ const dm=r.pos-x.d; return WIFI_SVG+avHtml(x.name,x.pic,16)+esc(x.name+' · '+(dm>=0?'you lead by ':'behind by ')+Math.abs(Math.round(dm))+' m · '+Math.round(x.spd)+' km/h'+(x.pwr!=null?' · '+x.pwr+' W':'')+(x.hr?' · ♥ '+x.hr:'')); }).join('\n');
 }
 function drawRemoteOnProfile(ctx,c){
   const m=remoteNow(); if(!m||m.mismatch||!pg) return;
   m.riders.forEach((x,i)=>{
     const dpr=pg.dpr, px=pg.x(x.d), py=pg.y(pointAt(x.d).ele);
     ctx.strokeStyle=RCOL[i%RCOL.length]; ctx.lineWidth=2*dpr; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,pg.H-pg.padB); ctx.stroke();
-    ctx.fillStyle=RCOL[i%RCOL.length]; ctx.strokeStyle='#fff'; ctx.beginPath(); ctx.arc(px,py,6*dpr,0,7); ctx.fill(); ctx.stroke();
+    drawPin(ctx,dpr,px,py,RCOL[i%RCOL.length],x.name,x.pic);
     chipText(ctx,dpr,px+9*dpr,py-8*dpr,'left',[{t:x.name}],11);
   });
 }
@@ -1899,10 +1920,10 @@ async function loadHistMeta(){
 const hDate=t=>new Date(t).toLocaleDateString([],{year:'numeric',month:'short',day:'numeric'});
 let histSel=new Set(), histFavOnly=false, histProf='', cmpA=null;
 function histRow(m,chk){
-  if(m.kind==='ftp') return `<div class="hrow">${chk?`<input type="checkbox" class="hchk" data-id="${m.id}" ${histSel.has(m.id)?'checked':''}> `:''}<button class="hstar" data-a="fav" data-id="${m.id}" title="Favourite">${m.fav?'★':'☆'}</button><b>${esc(m.title||'FTP')}</b> · ${esc(hDate(m.t))} · ${esc(m.name)}<br>FTP <b>${m.ftpRes} W</b> · ${fmtT(m.secs)}${m.avgH!=null?' · ♥ '+Math.round(m.avgH):''}<br>
+  if(m.kind==='ftp') return `<div class="hrow">${chk?`<input type="checkbox" class="hchk" data-id="${m.id}" ${histSel.has(m.id)?'checked':''}> `:''}<button class="hstar" data-a="fav" data-id="${m.id}" title="Favourite">${m.fav?'★':'☆'}</button><b>${esc(m.title||'FTP')}</b> · ${esc(hDate(m.t))} · ${avHtml(m.name,picOf(m.pid),16)}${esc(m.name)}<br>FTP <b>${m.ftpRes} W</b> · ${fmtT(m.secs)}${m.avgH!=null?' · ♥ '+Math.round(m.avgH):''}<br>
     <button class="hbtn" data-a="stats" data-id="${m.id}">Stats</button><button class="hbtn${cmpA===m.id?' on':''}" data-a="cmp" data-id="${m.id}" title="Compare two FTP tests on the same graphs">${cmpA===m.id?'⇄ Pick another…':'⇄ Compare'}</button><button class="hbtn" data-a="ren" data-id="${m.id}">✎ Rename</button><button class="hbtn" data-a="del" data-id="${m.id}">Delete</button></div>`;
   const ttl=m.title?esc(m.title):esc(hDate(m.t));
-  return `<div class="hrow">${chk?`<input type="checkbox" class="hchk" data-id="${m.id}" ${histSel.has(m.id)?'checked':''}> `:''}<button class="hstar" data-a="fav" data-id="${m.id}" title="Favourite">${m.fav?'★':'☆'}</button><b>${ttl}</b>${m.title?' · '+esc(hDate(m.t)):''} · ${esc(m.name)}<br>${m.km.toFixed(1)} km · ${fmtT(m.secs)}${m.avgP!=null?' · '+Math.round(m.avgP)+' W avg':''}${m.avgH!=null?' · ♥ '+Math.round(m.avgH):''}<br>
+  return `<div class="hrow">${chk?`<input type="checkbox" class="hchk" data-id="${m.id}" ${histSel.has(m.id)?'checked':''}> `:''}<button class="hstar" data-a="fav" data-id="${m.id}" title="Favourite">${m.fav?'★':'☆'}</button><b>${ttl}</b>${m.title?' · '+esc(hDate(m.t)):''} · ${avHtml(m.name,picOf(m.pid),16)}${esc(m.name)}<br>${m.km.toFixed(1)} km · ${fmtT(m.secs)}${m.avgP!=null?' · '+Math.round(m.avgP)+' W avg':''}${m.avgH!=null?' · ♥ '+Math.round(m.avgH):''}<br>
     <button class="hbtn" data-a="stats" data-id="${m.id}">Stats</button><button class="hbtn${cmpA===m.id?' on':''}" data-a="cmp" data-id="${m.id}" title="Compare two rides on the same graphs">${cmpA===m.id?'⇄ Pick another…':'⇄ Compare'}</button><button class="hbtn" data-a="ride" data-id="${m.id}">Ride again</button><button class="hbtn" data-a="ghost" data-id="${m.id}">Race as ghost</button><button class="hbtn" data-a="ren" data-id="${m.id}">✎ Rename</button><button class="hbtn" data-a="del" data-id="${m.id}">Delete</button></div>`;
 }
 async function hUpdate(id,patch){
@@ -2078,7 +2099,7 @@ $('btnPrev').onclick=async()=>{
 
 /* ---------- rider profiles (name, gear, weight, FTP) ---------- */
 const profAll=()=>{ try{ return JSON.parse(store.get('sr_profiles')||'[]'); }catch(e){ return []; } };
-const profList=()=>profAll().filter(p=>!p.del);
+const profList=()=>profAll().filter(p=>!p.del&&p.name);
 const profSave=a=>store.set('sr_profiles',JSON.stringify(a));
 function refreshProfSelects(){
   const list=profList();
@@ -2089,6 +2110,7 @@ function refreshProfSelects(){
     if(sel.value==='') r.profileId=null;
     $('profDel'+r.i).style.visibility=r.profileId?'visible':'hidden';
   });
+  try{ gsUi(); }catch(e){}
   try{ applyNames(); }catch(e){}
   if(typeof histOn!=='undefined'&&histOn) refreshHist();
 }
@@ -2102,15 +2124,17 @@ function chooseProfile(i,id){
     store.set('sr_rname'+i,p.name); store.set('sr_mass'+i,p.mass); store.set('sr_ftp'+i,p.ftp); showGear(r); applyNames();
   }
   $('profDel'+i).style.visibility=r.profileId?'visible':'hidden';
+  try{ gsUi(); }catch(e){}
 }
-function saveProfile(i){
-  const r=R[i], name=($('rname'+i).value.trim()||('Rider '+(i+1)));
-  const all=profAll(), list=all.filter(x=>!x.del);
-  let p=list.find(x=>x.id===r.profileId)||list.find(x=>x.name.toLowerCase()===name.toLowerCase());
-  const isNew=!p; if(!p){ p={id:'p'+Date.now().toString(36)}; all.push(p); }
-  Object.assign(p,{name,gear:r.gear,mass:+$('mass'+i).value||85,ftp:+$('ftp'+i).value||200,u:Date.now()});
-  profSave(all); gsSoon(); r.profileId=p.id; store.set('sr_prof'+i,p.id); refreshProfSelects();
-  profNote(i,(isNew?'Created ':'Updated ')+'profile “'+name+'”. ✓');
+function profFields(i){ const r=R[i]; return {name:($('rname'+i).value.trim()||('Rider '+(i+1))),gear:r.gear,mass:+$('mass'+i).value||85,ftp:+$('ftp'+i).value||200}; }
+function profCreate(i,sync){ const all=profAll(), p={id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),...profFields(i),sync:!!sync,u:Date.now()}; all.push(p); profSave(all); const r=R[i]; r.profileId=p.id; store.set('sr_prof'+i,p.id); refreshProfSelects(); return p; }
+let _autoT={};
+function profAuto(i){                      // edits to the selected profile save themselves (no save button)
+  clearTimeout(_autoT[i]); _autoT[i]=setTimeout(()=>{
+    const r=R[i]; if(!r.profileId) return; const all=profAll(), p=all.find(x=>x.id===r.profileId&&!x.del); if(!p) return;
+    const nf=profFields(i); if(['name','gear','mass','ftp'].every(k=>p[k]===nf[k])) return;
+    Object.assign(p,nf,{u:Date.now()}); profSave(all); refreshProfSelects(); gsSoon();
+  },900);
 }
 function deleteProfile(i){
   const r=R[i], list=profList(), p=list.find(x=>x.id===r.profileId); if(!p) return;
@@ -2120,7 +2144,8 @@ function deleteProfile(i){
 }
 R.forEach(r=>{
   $('prof'+r.i).onchange=e=>chooseProfile(r.i,e.target.value);
-  $('profSave'+r.i).onclick=()=>saveProfile(r.i); $('profDel'+r.i).onclick=()=>deleteProfile(r.i);
+  $('profDel'+r.i).onclick=()=>deleteProfile(r.i);
+  ['rname','ftp','mass','ergW'].forEach(k=>{ const el=$(k+r.i); if(el) el.addEventListener('change',()=>profAuto(r.i)); });
   const saved=store.get('sr_prof'+r.i); if(saved&&profList().some(p=>p.id===saved)){ r.profileId=saved; }
 });
 refreshProfSelects();
@@ -2129,14 +2154,16 @@ R.forEach(r=>{ if(r.profileId) chooseProfile(r.i,r.profileId); });
 /* ---------- Google sync: route history + profiles kept in a private app folder in your own Google Drive ---------- */
 const GS={cid:store.get('sr_gcid')||gcCfg().clientId||'',on:store.get('sr_gsync')==='1',tok:null,exp:0,busy:false,err:false,last:+store.get('sr_glast')||0,timer:null,pic:store.get('sr_gpic')||''};
 const GS_SCOPE='https://www.googleapis.com/auth/drive.appdata openid email profile';
+const gsProf=i=>profList().find(p=>p.id===R[i].profileId);
+const gsOnFor=i=>{ const p=gsProf(i); return !!(GS.on&&p&&p.sync===true); };
 function gsUi(){
-  R.forEach(r=>{ const b=$('gsb'+r.i); if(!b) return;
+  R.forEach(r=>{ const b=$('gsb'+r.i); if(!b) return; const mine=gsOnFor(r.i);
     if(!b._orig) b._orig=b.innerHTML;
-    const av=GS.on&&GS.pic; const want=av?'av':'pill';
+    const av=mine&&GS.pic; const want=av?'av':'pill';
     if(b._mode!==want||(av&&b._pic!==GS.pic)){ b._mode=want; b._pic=GS.pic; b.classList.toggle('gsav',!!av); b.innerHTML=av?'<img src="'+esc(GS.pic)+'" alt="Google account" referrerpolicy="no-referrer" width="24" height="24">':b._orig; }
-    b.setAttribute('aria-pressed',GS.on?'true':'false'); b.classList.toggle('busy',GS.busy); b.classList.toggle('err',GS.on&&GS.err&&!GS.busy);
-    b.title=!GS.on?'Sync your route history and profiles across devices with your Google account (private to you, kept in your own Drive). Shift-click to change the client ID.':
-      GS.busy?'Syncing…':GS.err?'Sync problem: '+(GS.msg||'tap to sign in again'):'Sync is on'+(GS.last?' · last '+new Date(GS.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'')+'. Tap to turn off.'; });
+    b.setAttribute('aria-pressed',mine?'true':'false'); b.classList.toggle('busy',GS.busy&&mine); b.classList.toggle('err',mine&&GS.err&&!GS.busy);
+    b.title=!mine?'Sync this profile and its rides with your Google account (kept in your own Drive; other profiles on this device are not uploaded). Shift-click to change the client ID.':
+      GS.busy?'Syncing…':GS.err?'Sync problem: '+(GS.msg||'tap to sign in again'):'This profile syncs'+(GS.last?' · last '+new Date(GS.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'')+'. Tap to stop syncing it.'; });
 }
 function gsLoadLib(){ return new Promise((ok,no)=>{ if(window.google&&google.accounts&&google.accounts.oauth2) return ok(); const sc=document.createElement('script'); sc.src='https://accounts.google.com/gsi/client'; sc.onload=ok; sc.onerror=()=>no(new Error('Could not reach Google (offline?)')); document.head.appendChild(sc); }); }
 async function gsToken(interactive){
@@ -2179,44 +2206,55 @@ async function gsSync(interactive){
     for(const id of Object.keys(tomb)){ if(local[id]){ await hTx('readwrite',st=>st.delete(id)); delete local[id]; nDown++; } const f=byName['ride_'+id+'.json']; if(f){ await gsApi('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE'}); delete byName['ride_'+id+'.json']; } }
     store.set('sr_gdel',JSON.stringify(tomb));
     const tj=JSON.stringify(tomb); if(Object.keys(tomb).length){ const r=await gsPut('deleted.json',tomb,byName['deleted.json']&&byName['deleted.json'].id); byName['deleted.json']={id:r.id,name:'deleted.json'}; }
-    // profiles: union, newest edit wins
+    // profiles: only profiles you switched Sync on for are kept in Drive; switched-off ones are scrubbed to a bare marker
     const loc=profAll(), pf=byName['profiles.json']; let rem=[]; if(pf){ try{ rem=await gsGet(pf.id); }catch(e){} }
-    const mp={}; [...rem,...loc].forEach(p=>{ if(!mp[p.id]||(p.u||0)>(mp[p.id].u||0)) mp[p.id]=p; });
-    const merged0=Object.values(mp);
-    // same name on two devices = same person: keep one profile (the oldest id), fold the others into it
-    const grp={}, remap={}; merged0.filter(p=>!p.del&&p.name).forEach(p=>{ const k=p.name.trim().toLowerCase(); (grp[k]=grp[k]||[]).push(p); });
-    Object.values(grp).forEach(g=>{ if(g.length<2) return; g.sort((x,y)=>x.id<y.id?-1:1); const w=g[0], nw=g.slice().sort((x,y)=>(y.u||0)-(x.u||0))[0];
-      Object.assign(w,{gear:nw.gear,mass:nw.mass,ftp:nw.ftp,u:Date.now()}); g.slice(1).forEach(p=>{ remap[p.id]=w.id; p.del=true; p.alias=w.id; p.u=Date.now(); }); });
-    if(Object.keys(remap).length){
-      for(const id of Object.keys(local)){ const rec=local[id]; if(rec.pid&&remap[rec.pid]){ const nr={...rec,pid:remap[rec.pid],mod:Date.now()}; local[id]=nr; await hTx('readwrite',st=>st.put(nr)); nDown++; } }
-      R.forEach(r=>{ if(r.profileId&&remap[r.profileId]) r.profileId=remap[r.profileId]; });
-    }
-    const merged=merged0, same=(a,b)=>JSON.stringify([...a].sort((x,y)=>x.id<y.id?-1:1))===JSON.stringify([...b].sort((x,y)=>x.id<y.id?-1:1));
+    const mp={}; rem.forEach(p=>{ mp[p.id]=p; });
+    loc.forEach(p=>{ const q=mp[p.id];
+      if(!q||(p.u||0)>=(q.u||0)) mp[p.id]=p;
+      else if(q.sync===false&&!q.name) mp[p.id]={...p,sync:false,u:q.u};          // another device stopped syncing it: keep my copy local
+      else mp[p.id]=q; });
+    const merged=Object.values(mp); merged.forEach(p=>{ if(p.sync===true&&!p.del&&GS.pic&&!p.pic){ p.pic=GS.pic; p.u=Date.now(); } });
+    const same=(a,b)=>JSON.stringify([...a].sort((x,y)=>x.id<y.id?-1:1))===JSON.stringify([...b].sort((x,y)=>x.id<y.id?-1:1));
     if(!same(merged,loc)){ profSave(merged); refreshProfSelects(); }
-    if(!pf||!same(merged,rem)) await gsPut('profiles.json',merged,pf&&pf.id);
+    const up=merged.map(p=>p.del?{id:p.id,del:true,u:p.u||0}:(p.sync!==true?{id:p.id,sync:false,u:p.u||0}:p));
+    if(!pf||!same(up,rem)) await gsPut('profiles.json',up,pf&&pf.id);
+    const pmap={}; merged.forEach(p=>{ pmap[p.id]=p; });
+    const ridesOk=rec=>!!(rec.pid&&pmap[rec.pid]&&!pmap[rec.pid].del&&pmap[rec.pid].sync===true);
     // rides: new ones go up, new ones come down, edits (favourite, name) follow the newest change
     for(const id of Object.keys(local)){ const rec=local[id], f=byName['ride_'+id+'.json'];
+      if(!ridesOk(rec)){ if(f){ await gsApi('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE'}); delete byName['ride_'+id+'.json']; } continue; }
       if(!f||((rec.mod||0)>(rec.gsT||0))){ const r=await gsPut('ride_'+id+'.json',rec,f&&f.id); await hTx('readwrite',st=>st.put({...rec,gsT:Date.now(),gsM:r.modifiedTime})); nUp++; }
       else if(f.modifiedTime!==rec.gsM&&rec.gsM){ const rm=await gsGet(f.id); await hTx('readwrite',st=>st.put({...rm,gsT:Date.now(),gsM:f.modifiedTime})); nDown++; }
       else if(!rec.gsM){ await hTx('readwrite',st=>st.put({...rec,gsT:Date.now(),gsM:f.modifiedTime})); } }
-    for(const f of files){ const m=/^ride_(.+)\.json$/.exec(f.name); if(!m||local[m[1]]||tomb[m[1]]||!byName[f.name]) continue; const rm=await gsGet(f.id); if(!rm||!rm.id) continue; await hTx('readwrite',st=>st.put({...rm,gsT:Date.now(),gsM:f.modifiedTime})); nDown++; }
+    for(const f of files){ const m=/^ride_(.+)\.json$/.exec(f.name); if(!m||local[m[1]]||tomb[m[1]]||!byName[f.name]) continue; const rm=await gsGet(f.id); if(!rm||!rm.id) continue; if(rm.pid&&pmap[rm.pid]&&pmap[rm.pid].sync!==true){ await gsApi('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE'}); continue; } await hTx('readwrite',st=>st.put({...rm,gsT:Date.now(),gsM:f.modifiedTime})); nDown++; }
+    // first connection on this device: take the rider's synced profile, or create it from what is typed in
+    if(GS.fresh!=null){ const i=GS.fresh; GS.fresh=null; const rr=R[i]; if(rr&&!(profList().some(p=>p.id===rr.profileId))){ const first=profList().find(p=>p.sync===true); if(first){ chooseProfile(i,first.id); toast('Loaded your synced profile “'+first.name+'”. Change it in the Profile list if that is not you.',6000); } else { profCreate(i,true); gsSoon(); } } }
     GS.last=Date.now(); store.set('sr_glast',GS.last); GS.err=false; GS.msg=''; dlog('sync','Done: sent '+nUp+', received '+nDown+', profiles now '+profList().length);
     if(nDown){ await loadHistMeta(); if(typeof histOn!=='undefined'&&histOn) refreshHist(); }
     if(interactive||nUp||nDown) toast('Synced with Google · '+nUp+' sent, '+nDown+' received · Drive holds '+nRemoteRides+' rides, '+profList().length+' profile'+(profList().length===1?'':'s')+(nDown&&!nUp&&R.every(x=>!x.profileId)?'. Pick your profile in Profile ⚙.':''),6000);
   }catch(e){ console.error(e); GS.err=true; const em=String(e.message||e); dlog('sync','ERROR '+em); if(interactive||GS.msg!==em) toast('Google sync: '+em+(/403/.test(em)?' (is the Google Drive API enabled in your Google Cloud project?)':''),8000); GS.msg=em; }
   GS.busy=false; gsUi();
 }
-function gsToggle(e){
-  if(GS.on&&!(e&&e.shiftKey)){ GS.on=false; store.set('sr_gsync','0'); GS.tok=null; gsUi(); toast('Sync off. Your rides stay on this device and in your Drive.',3500); return; }
-  if(!/^https?:$/.test(location.protocol)){ toast('Google sign-in needs the app opened from a web address (https://…), not a local file.',7000); return; }
-  if(!GS.cid||(e&&e.shiftKey)){
-    const v=prompt('Paste your Google OAuth client ID (ends in .apps.googleusercontent.com).\nSetup steps are in the Street-Ride notes.',GS.cid||''); if(v===null) return;
-    GS.cid=v.trim(); store.set('sr_gcid',GS.cid); if(!GS.cid){ gsUi(); return; }
+function gsbClick(i,e){
+  const r=R[i];
+  if(e&&e.shiftKey){ const v=prompt('Paste your Google OAuth client ID (ends in .apps.googleusercontent.com).',GS.cid||''); if(v!==null){ GS.cid=v.trim(); store.set('sr_gcid',GS.cid); } return; }
+  let p=gsProf(i);
+  if(GS.on&&p&&p.sync===true){                       // stop syncing this profile only
+    const all=profAll(), q=all.find(x=>x.id===p.id); q.sync=false; q.u=Date.now(); profSave(all);
+    const lastOne=!profList().some(x=>x.sync===true);
+    gsUi(); (async()=>{ for(let k=0;k<30&&GS.busy;k++) await new Promise(ok=>setTimeout(ok,300)); await gsSync(false); if(lastOne){ GS.on=false; store.set('sr_gsync','0'); gsUi(); } })(); toast('“'+p.name+'” no longer syncs. Its copy in your Drive is being removed; it stays on this device.',5000); return;
   }
-  GS.on=true; GS.err=false; store.set('sr_gsync','1'); gsUi(); gsSync(true);
+  if(!/^https?:$/.test(location.protocol)){ toast('Google sign-in needs the app opened from a web address (https://…), not a local file.',7000); return; }
+  if(!GS.cid){ const v=prompt('Paste your Google OAuth client ID (ends in .apps.googleusercontent.com).'); if(v===null) return; GS.cid=v.trim(); store.set('sr_gcid',GS.cid); if(!GS.cid) return; }
+  if(p){ const all=profAll(), q=all.find(x=>x.id===p.id); q.sync=true; if(GS.pic) q.pic=GS.pic; q.u=Date.now(); profSave(all); }
+  else if(GS.on){ profCreate(i,true); }
+  else GS.fresh=i;                                      // new device, no profile picked: look for yours in the account first
+  const first=!GS.on; GS.on=true; GS.err=false; store.set('sr_gsync','1'); gsUi(); gsSync(true);
+  if(first){ setInterval(()=>{ if(!document.hidden) gsSync(false); },300000); }
 }
-R.forEach(r=>{ $('gsb'+r.i).onclick=gsToggle; });
+R.forEach(r=>{ $('gsb'+r.i).onclick=e=>gsbClick(r.i,e); });
 gsUi();
+if(GS.on&&!store.get('sr_gmig16')){ store.set('sr_gmig16','1'); const all=profAll(), mine=store.get('sr_prof0'); all.forEach(p=>{ if(p.sync===undefined&&!p.del){ p.sync=(p.id===mine); p.u=Date.now(); } }); profSave(all); }
 if(GS.on&&GS.cid){ setTimeout(()=>gsSync(false),2500); setInterval(()=>{ if(!document.hidden) gsSync(false); },300000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&Date.now()-GS.last>60000) gsSync(false); }); }
 
 
@@ -3086,7 +3124,7 @@ function drawProfile(){
   for(let i=0;i<S.n;i++){
     const r=R[i],p=pointAt(r.pos),px=pg.x(r.pos),py=pg.y(p.ele);
     ctx.strokeStyle=COLORS[i]; ctx.lineWidth=2*dpr; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,pg.H-pg.padB); ctx.stroke();
-    ctx.fillStyle=COLORS[i]; ctx.strokeStyle='#fff'; ctx.lineWidth=2*dpr; ctx.beginPath(); ctx.arc(px,py,6*dpr,0,7); ctx.fill(); ctx.stroke();
+    drawPin(ctx,dpr,px,py,COLORS[i],r.name,riderPic(r));
     const left=!(px>c.width-80*dpr);
     chipText(ctx,dpr,px+(left?10:-10)*dpr,py-8*dpr,left?'left':'right',[{t:r.roadGrade.toFixed(1)+'%'}]);
   }
@@ -3244,7 +3282,7 @@ function openSummary(act,routeArg){
   act.forEach(r=>{
     const st=computeStats(r), n=r.name.replace(/[^\w\-]+/g,'_').toLowerCase()+'-'+dstr(r);
     links+=blobLink(makeKml(r),'application/vnd.google-earth.kml+xml',n+'-ride.kml','⬇ '+r.name+' KML')+blobLink(makeCsv(r),'text/csv',n+'-stats.csv','⬇ '+r.name+' stats (CSV)')+blobLink(makeTcx(r),'application/vnd.garmin.tcx+xml',n+'-strava.tcx','⬇ '+r.name+' Strava file (TCX)');
-    cards+=`<div class="card" style="border-color:${COLORS[r.i]}"><b>${esc(r.name)}</b>${r.pname?` <span style="opacity:.6;font-size:12px">· profile ${esc(r.pname)}</span>`:''}<table>
+    cards+=`<div class="card" style="border-color:${COLORS[r.i]}"><b>${avHtml(r.name,picOf(r.profileId),18)}${esc(r.name)}</b>${r.pname?` <span style="opacity:.6;font-size:12px">· profile ${esc(r.pname)}</span>`:''}<table>
       <tr><td>Date</td><td>${new Date(r.startWall||Date.now()).toLocaleString([],{dateStyle:'medium',timeStyle:'short'})}</td></tr>
       <tr><td>Duration</td><td>${fmtT(st.secs)}</td></tr>
       <tr><td>Distance</td><td>${(st.dist/1000).toFixed(2)} km</td></tr>
@@ -3778,7 +3816,7 @@ function applyMiniVisibility(){
     mmStale=false;
     if(mmLine) mm.removeLayer(mmLine); mmMarkers.forEach(m=>mm.removeLayer(m)); mmMarkers=[];
     mmLine=L.polyline(S.route.pts.map(p=>[p.lat,p.lng]),{color:'#e5826b',weight:4}).addTo(mm);
-    for(let i=0;i<2;i++) mmMarkers.push(L.circleMarker([S.route.pts[0].lat,S.route.pts[0].lng],{radius:6,color:'#fff',weight:2,fillColor:COLORS[i],fillOpacity:1}).addTo(mm));
+    for(let i=0;i<2;i++) mmMarkers.push(L.marker([S.route.pts[0].lat,S.route.pts[0].lng],{icon:pinIcon(COLORS[i],R[i].name,riderPic(R[i])),interactive:false,keyboard:false}).addTo(mm));
     mm.fitBounds(mmLine.getBounds(),{padding:[14,14]});
     showMiniCountry();
   }
@@ -3788,13 +3826,13 @@ function updateMini(t){
   if(!mm||!miniOn||!S.route) return;
   for(let i=0;i<2;i++){
     const mk=mmMarkers[i]; if(!mk) continue;
-    if(i<S.n){ const p=pointAt(R[i].pos); mk.setLatLng([p.lat,p.lng]); if(!mm.hasLayer(mk)) mk.addTo(mm); }
+    if(i<S.n){ const sig=R[i].name+'|'+riderPic(R[i]); if(mk._sig!==sig){ mk._sig=sig; mk.setIcon(pinIcon(COLORS[i],R[i].name,riderPic(R[i]))); } const p=pointAt(R[i].pos); mk.setLatLng([p.lat,p.lng]); if(!mm.hasLayer(mk)) mk.addTo(mm); }
     else if(mm.hasLayer(mk)) mm.removeLayer(mk);
   }
   { const rn=remoteNow(), ok=rn&&rn.riders.length>0;
     for(let k=0;k<8;k++){
       if(ok&&rn.riders[k]){ const p=pointAt(rn.riders[k].d);
-        if(!mmRemote[k]) mmRemote[k]=L.circleMarker([p.lat,p.lng],{radius:6,color:'#fff',weight:2,fillColor:RCOL[k%RCOL.length],fillOpacity:1}).addTo(mm); else{ mmRemote[k].setLatLng([p.lat,p.lng]); if(!mm.hasLayer(mmRemote[k])) mmRemote[k].addTo(mm); } }
+        const rx=rn.riders[k], sg=rx.name+'|'+(rx.pic||''); if(!mmRemote[k]){ mmRemote[k]=L.marker([p.lat,p.lng],{icon:pinIcon(RCOL[k%RCOL.length],rx.name,rx.pic),interactive:false,keyboard:false}).addTo(mm); mmRemote[k]._sig=sg; } else{ if(mmRemote[k]._sig!==sg){ mmRemote[k]._sig=sg; mmRemote[k].setIcon(pinIcon(RCOL[k%RCOL.length],rx.name,rx.pic)); } mmRemote[k].setLatLng([p.lat,p.lng]); if(!mm.hasLayer(mmRemote[k])) mmRemote[k].addTo(mm); } }
       else if(mmRemote[k]&&mm.hasLayer(mmRemote[k])) mm.removeLayer(mmRemote[k]);
     } }
   if(ghost&&ghost.ok){ const gs=ghostState(Math.max(...R.slice(0,S.n).map(riderClock))); if(gs){ const p=pointAt(gs.d);
