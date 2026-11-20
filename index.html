@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.57 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.62 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -493,6 +493,46 @@
   body.phone .side,body.phone .sumleft{width:auto;max-height:48%;}
   body.phone .sumwrap{flex-direction:column;}
   body.phone #histPanel{left:6px;right:6px;width:auto;top:auto;height:55%;}}
+  /* real-ride dashboard */
+  #recBox.recbox{padding:0;background:none;border:0;}
+  button.main.recbig{display:block;width:100%;margin:0;min-height:84px;font-size:20px;font-weight:600;border-radius:12px;letter-spacing:.2px;}
+  body.phone button.main.recbig{min-height:96px;font-size:21px;}
+  #recStat:empty{display:none;} #recGhost:disabled{display:none;}
+  #rrMap{z-index:0;isolation:isolate;}
+  #rrv{position:fixed;inset:0;z-index:55;background:#14100e;display:none;overflow:hidden;color:#fff;}
+  #rrv.on{display:block;}
+  #rrMap{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,#2a1c16,#140e0b);}
+  #rrv .leaflet-bottom{bottom:calc(min(44vh,360px) + 16px);}
+  #rrv .leaflet-control-attribution{font-size:9px;opacity:.55;background:none;color:#ddd;}
+  #rrv .rrTop{position:absolute;z-index:6;top:max(8px,env(safe-area-inset-top));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));display:flex;gap:8px;align-items:center;pointer-events:none;}
+  #rrv .rrTop>*{pointer-events:auto;}
+  #rrSt{font-size:13px;color:#ffd27d;background:rgba(30,12,8,.72);border-radius:10px;padding:0 8px;}
+  #rrSt:empty{display:none;}
+  .rrBtn{background:rgba(30,12,8,.8);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px 14px;font-size:15px;min-height:44px;cursor:pointer;}
+  .rrBtn.stop{background:#a8332b;border-color:#d95a50;}
+  .rrBtn.dim{opacity:.7;}
+  #rrv .dash{left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));z-index:6;align-items:stretch;}
+  #rrv .dchips{width:100%;}
+  #rrv .tile.info{flex:1;justify-content:space-evenly;}
+  #rrv .tile.pw{width:clamp(92px,24vw,150px);}
+  #rrv .dchips{height:min(44vh,360px);}
+  #rrv .tile{background:rgba(24,10,7,.97);}
+  #rrv .tile.pw{padding:10px 6px;}
+  #rrv .dr b{min-width:0;font-size:32px;}
+  #rrv .dr.hr b{font-size:30px;} #rrv .dr .hh{font-size:22px;color:#ff6b6b;}
+  #rrv .dr.dw b{font-size:34px;} #rrv .dr.dw span{font-size:11px;}
+  #rrv .tile.info{padding:10px 16px;gap:6px;}
+  #rrv .dr span{font-size:13px;}
+  #rrv #rrTime{font-size:clamp(28px,7vw,40px);} #rrv #rrDist{font-size:clamp(28px,7vw,40px);} #rrv #rrGrade{font-size:clamp(30px,8vw,44px);} #rrv #rrSpd{font-size:clamp(46px,13vw,76px);}
+  #rrv .tile.info .dr{width:100%;gap:8px;} #rrv .rl{flex:1;font-size:clamp(13px,3.6vw,18px);letter-spacing:.8px;text-transform:uppercase;opacity:.7;align-self:center;}
+  #rrv .tile.info .dr b{text-align:right;} #rrv .tile.info .dr span:not(.rl){min-width:3.8em;}
+  .rrdot{display:inline-block;align-self:center;width:15px;height:15px;border-radius:50%;background:#e53935;box-shadow:0 0 0 0 rgba(229,57,53,.7);animation:rrp 1.3s infinite;}
+  #rrv.paused .rrdot{animation:none;background:#ffb300;}
+  @keyframes rrp{0%{box-shadow:0 0 0 0 rgba(229,57,53,.7);opacity:1;}70%{box-shadow:0 0 0 10px rgba(229,57,53,0);opacity:.55;}100%{box-shadow:0 0 0 0 rgba(229,57,53,0);opacity:1;}}
+  #rrDlg{position:absolute;inset:0;z-index:9;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;}
+  #rrDlg[hidden]{display:none;}
+  .rrBox{background:#3a1c13;border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;min-width:min(86vw,320px);text-align:center;}
+  .rrBox b{font-size:18px;} #rrDlgTxt{opacity:.85;margin-bottom:4px;}
   .recbox{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:10px;}
   .recbox.on{border-color:var(--clay);}
   .recbox.on #recBtn{animation:recp 1.6s infinite;}
@@ -526,7 +566,7 @@
 
 <div id="tut" role="dialog" aria-modal="true" aria-label="Quick tour"><div class="card"><div class="tic" id="tutIc"></div><h3 id="tutH"></h3><div id="tutB"></div><div class="dots" id="tutD"></div><div class="row"><button class="lnk" id="tutSkip">Skip</button><button class="lnk" id="tutBack">Back</button><button class="main" id="tutNext">Next</button></div></div></div>
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.57</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.62</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
 
   <h3 class="hq">Connect<button id="tutQ" type="button" title="Quick tour" aria-label="Quick tour">?</button></h3>
   <div id="riderCtl"></div>
@@ -625,11 +665,11 @@
     <div class="legend"><i></i>Green lines = roads with Mapillary photos (zoom in to a city; needs your token). Drag the markers to fine-tune. Fill in any of start, finish, distance, difficulty and leave the rest blank: missing pieces are chosen for you. Press Build again for a different random ride. “Camera roads only” stays on photographed streets; “Any road” ignores coverage.</div>
     <div style="flex:1"></div>
     <div class="recbox" id="recBox">
-      <h3 style="margin:0 0 6px">● Record a real ride (KML)</h3>
-      <input type="text" id="recName" placeholder="Ride name (optional)">
-      <div class="two"><button class="main red" id="recBtn">● Start recording</button><button class="main alt" id="recGhost" disabled title="Use the last recording as a ghost">◌ Use as ghost</button></div>
-      <div id="recStat" class="hint">Uses your phone's GPS. Keep Street-Ride open and the screen on while you ride. When you stop, a KML file is saved that you can load as a ghost rider.</div>
+      <input type="hidden" id="recName" value="">
+      <button class="main red recbig" id="recBtn" title="Uses your phone's GPS for speed, elevation and route, and estimates your watts. Keep Street-Ride open and the screen on. When you stop, the ride is saved to your ride history, where you can download the track.">● Start Ride Recording!</button>
+      <div id="recStat" class="hint"></div>
       <div id="recSaved" class="hint" style="display:none"></div>
+      <button class="lnk" id="recGhost" disabled title="Use the last recording as a ghost" style="width:auto;align-self:flex-start">◌ Use last ride as ghost</button>
     </div>
     <button class="lnk" id="btnSat" title="Switch the map between street and satellite" style="width:auto;align-self:flex-start">🛰 satellite view: off</button>
   </div>
@@ -697,7 +737,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.57';
+const APP_VER='1.62';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -1993,7 +2033,7 @@ function histRow(m,chk){
     <button class="hbtn" data-a="stats" data-id="${m.id}">Stats</button><button class="hbtn${cmpA===m.id?' on':''}" data-a="cmp" data-id="${m.id}" title="Compare two FTP tests on the same graphs">${cmpA===m.id?'⇄ Pick another…':'⇄ Compare'}</button><button class="hbtn" data-a="ren" data-id="${m.id}">✎ Rename</button><button class="hbtn" data-a="del" data-id="${m.id}">Delete</button></div>`;
   const ttl=m.title?esc(m.title):esc(hDate(m.t));
   return `<div class="hrow">${chk?`<input type="checkbox" class="hchk" data-id="${m.id}" ${histSel.has(m.id)?'checked':''}> `:''}<button class="hstar" data-a="fav" data-id="${m.id}" title="Favourite">${m.fav?'★':'☆'}</button><b>${ttl}</b>${m.title?' · '+esc(hDate(m.t)):''} · ${avHtml(m.name,picOf(m.pid),16)}${esc(m.name)}<br>${m.km.toFixed(1)} km · ${fmtT(m.secs)}${m.avgP!=null?' · '+Math.round(m.avgP)+' W avg':''}${m.avgH!=null?' · ♥ '+Math.round(m.avgH):''}<br>
-    <button class="hbtn" data-a="stats" data-id="${m.id}">Stats</button><button class="hbtn${cmpA===m.id?' on':''}" data-a="cmp" data-id="${m.id}" title="Compare two rides on the same graphs">${cmpA===m.id?'⇄ Pick another…':'⇄ Compare'}</button><button class="hbtn" data-a="ride" data-id="${m.id}">Ride again</button><button class="hbtn" data-a="ghost" data-id="${m.id}">Race as ghost</button><button class="hbtn" data-a="ren" data-id="${m.id}">✎ Rename</button><button class="hbtn" data-a="del" data-id="${m.id}">Delete</button></div>`;
+    <button class="hbtn" data-a="stats" data-id="${m.id}">Stats</button><button class="hbtn${cmpA===m.id?' on':''}" data-a="cmp" data-id="${m.id}" title="Compare two rides on the same graphs">${cmpA===m.id?'⇄ Pick another…':'⇄ Compare'}</button><button class="hbtn" data-a="ride" data-id="${m.id}">Ride again</button><button class="hbtn" data-a="ghost" data-id="${m.id}">Race as ghost</button>${m.real?'<button class="hbtn" data-a="dl" data-id="'+m.id+'">⬇ Track (KML)</button>':''}<button class="hbtn" data-a="ren" data-id="${m.id}">✎ Rename</button><button class="hbtn" data-a="del" data-id="${m.id}">Delete</button></div>`;
 }
 async function hUpdate(id,patch){
   _hdb=_hdb||await hOpenDb();
@@ -2037,6 +2077,12 @@ async function histAction(a,id){
     }
     const rec=await hTx('readonly',s=>s.get(id)); if(!rec){ say('That ride was not found.'); return; }
     if(rec.kind==='ftp'){ if(a==='stats'){ ftpShowResult(rec); } return; }
+    if(a==='dl'){
+      const pts=(rec.samples||[]).map((x,i)=>({t:rec.t+i*1000,lat:x.lat,lng:x.lng,ele:x.ele,spd:x.spd||0}));
+      const d=new Date(rec.t), pad=n=>String(n).padStart(2,'0');
+      downloadText(recKml(pts,rec.title||rec.name,rec.t),'application/vnd.google-earth.kml+xml','street-ride-real-'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())+'.kml');
+      return;
+    }
     if(a==='stats'){
       const route={pts:rec.route.raw.map(q=>({lat:q[0],lng:q[1],ele:q[2]}))};
       $('setup').style.display='none'; if(histOn) setHist(false);
@@ -4105,7 +4151,7 @@ $('bkMerge').onclick=()=>mergeSameNameProfiles().catch(e=>{ $('bkMsg').textConte
   const TEST=/[\u{1F5FA}\u{1F3B2}\u{1F558}\u{1F517}\u{1F4C8}\u{1F6B4}\u{1F4CD}\u2B50\u{1F6F0}\u25B6\u23F8\u275A\u23F9\u25A0\u23ED]|[\u2665\u2B07\u2B06\u26A0\u26A1\u2699\u2714\u2605](?!\uFE0E)/u;
   const SPLIT=/(\u275A\u275A|[\u{1F5FA}\u{1F3B2}\u{1F558}\u{1F517}\u{1F4C8}\u{1F6B4}\u{1F4CD}\u2B50\u{1F6F0}\u25B6\u23F8\u23F9\u25A0\u23ED][\uFE0E\uFE0F]?)/u;
   function fix(t){
-    const v=t.nodeValue; if(!v||!TEST.test(v)) return;
+    if(!t.parentNode) return; const v=t.nodeValue; if(!v||!TEST.test(v)) return;
     const txt=v.replace(/([\u2665\u2B07\u2B06\u26A0\u26A1\u2699\u2714\u2605])(?!\uFE0E)/gu,'$1\uFE0E');
     const parts=txt.split(SPLIT);
     if(parts.length===1){ if(txt!==v) t.nodeValue=txt; return; }
@@ -4253,10 +4299,21 @@ function recStatus(extra){
   $('recStat').textContent='Recording '+recFmt(Date.now()-REC.t0)+' · '+(REC.dist/1000).toFixed(2)+' km · '+REC.pts.length+' points'+(extra?(' · '+extra):'');
 }
 function recSaveBackup(){ try{ localStorage.setItem(recKey,JSON.stringify({name:REC.name,t0:REC.t0,pts:REC.pts})); }catch(e){} }
+/* ---------- real-ride dashboard (v1.58): GPS speed, elevation, grade, estimated watts and a live trail map ---------- */
+const RR={on:false,paused:false,act:0,v:0,a:0,ele:null,grade:0,eb:[],samples:[],lastAcc:0,lastCb:0,fixes:0,sumW:0,cntW:0,wbuf:[],map:null,trail:null,casing:null,dot:null,tiles:null,trailPts:[],userT:0,prog:false,mapOn:store.get('sr_rrmap')!=='0',tick:null,el:null};
+/* power needed to hold this speed on this slope (no wind): air drag + rolling + climbing + acceleration, through a 97.5% drivetrain */
+function rrWatts(v,a,gr,ele,mass){
+  if(!(v>0.8)) return 0;
+  const g=9.81, th=Math.atan(gr/100), rho=1.225*Math.exp(-(ele||0)/8400), CdA=0.32, Crr=0.005, eff=0.975;
+  return clamp((0.5*rho*CdA*v*v*v + Crr*mass*g*Math.cos(th)*v + mass*g*Math.sin(th)*v + mass*v*a)/eff,0,1500);
+}
 function recOnPos(pos){
+  RR.lastCb=Date.now();
   const c=pos.coords, acc=c.accuracy||999;
   if(acc>60){ recStatus('waiting for a better GPS fix (±'+Math.round(acc)+' m)'); return; }
-  const t=pos.timestamp||Date.now(), p={t,lat:c.latitude,lng:c.longitude,ele:(c.altitude!=null&&isFinite(c.altitude))?c.altitude:(REC.last?REC.last.ele:0),spd:0};
+  if(RR.paused) return;
+  const t=pos.timestamp||Date.now(), altOk=(c.altitude!=null&&isFinite(c.altitude));
+  const p={t,lat:c.latitude,lng:c.longitude,ele:altOk?c.altitude:(REC.last?REC.last.ele:0),spd:0};
   if(REC.last){
     const dt=(t-REC.last.t)/1000; if(dt<1) return;
     const d=recHav(REC.last,p);
@@ -4264,18 +4321,139 @@ function recOnPos(pos){
     p.spd=(c.speed!=null&&isFinite(c.speed))?c.speed*3.6:(d/dt)*3.6;
     if(p.spd>90) return;                          // impossible jump for a bike
     REC.dist+=d;
+    const v0=RR.v; RR.v=v0+(p.spd/3.6-v0)*0.5; RR.a=clamp(RR.a*0.6+((RR.v-v0)/dt)*0.4,-3,3);
   }
-  REC.last=p; REC.pts.push(p);
+  if(altOk){                                      // GPS height is noisy: smooth it, then take the slope over the last ~80 m
+    RR.ele=RR.ele==null?c.altitude:RR.ele+(c.altitude-RR.ele)*0.25; p.ele=RR.ele;
+    RR.eb.push({d:REC.dist,e:RR.ele}); while(RR.eb.length>1&&RR.eb[0].d<REC.dist-160) RR.eb.shift();
+    const ref=RR.eb.find(x=>x.d>=REC.dist-80);
+    if(ref&&REC.dist-ref.d>=35) RR.grade=RR.grade*0.6+clamp((RR.ele-ref.e)/(REC.dist-ref.d)*100,-20,20)*0.4;
+  }
+  REC.last=p; REC.pts.push(p); RR.fixes++; RR.lastAcc=Date.now();
   if(Date.now()-REC.saveT>15000){ REC.saveT=Date.now(); recSaveBackup(); }
   recStatus('GPS ±'+Math.round(acc)+' m');
+  rrMove(p);
+}
+function rrTick(){
+  if(!RR.on) return;
+  const now=Date.now(), fresh=RR.fixes>0&&now-RR.lastAcc<5000;
+  if(!RR.paused && RR.fixes>0 && REC.last){
+    const v=fresh?RR.v:0, a=fresh?RR.a:0, w=rrWatts(v,a,RR.grade,RR.ele,+$('mass0').value||85);
+    RR.wbuf.push(w); if(RR.wbuf.length>3) RR.wbuf.shift();
+    RR.samples.push({lat:REC.last.lat,lng:REC.last.lng,ele:REC.last.ele||0,d:REC.dist,spd:v*3.6,pwr:Math.round(w),cad:null,hr:hrNow(R[0],performance.now()),grade:RR.grade,gear:0});
+    RR.act++; RR.sumW+=w; RR.cntW++;
+  }
+  rrUpdate();
+}
+function rrUpdate(){
+  const el=RR.el; if(!el) return;
+  const last=RR.samples.length?RR.samples[RR.samples.length-1]:null, now=Date.now();
+  const w3=(RR.paused||!RR.wbuf.length)?null:RR.wbuf.reduce((s,x)=>s+x,0)/RR.wbuf.length;
+  const ftp=ftpOf(0), frac=w3==null?0:clamp(w3/(1.5*ftp),0,1), av=RR.cntW?RR.sumW/RR.cntW:null;
+  $('rrW').textContent=w3==null?'–':Math.round(w3);
+  $('rrBar').classList.toggle('hot',frac>2/3+0.005);
+  $('rrFill').style.clipPath='inset('+((1-frac)*100).toFixed(1)+'% 0 0 0)';
+  const ga=$('rrAvg'); if(av==null) ga.style.display='none'; else{ ga.style.display='block'; ga.style.bottom=(clamp(av/(1.5*ftp),0,1)*100).toFixed(1)+'%'; }
+  const hr=hrNow(R[0],performance.now()); $('rrHr').textContent=hr==null?'–':hr;
+  $('rrTime').textContent=recFmt(RR.act*1000);
+  $('rrDist').textContent=(REC.dist/1000).toFixed(2);
+  $('rrGrade').textContent=RR.ele==null?'–':RR.grade.toFixed(1);
+  $('rrSpd').textContent=(last&&!RR.paused?last.spd:0).toFixed(1);
+  el.classList.toggle('paused',RR.paused);
+  const pl=RR.paused?'▶ Resume':'⏸ Pause'; if(RR.pl!==pl){ RR.pl=pl; $('rrPause').textContent=pl; }
+  let st='';
+  if(RR.paused) st='Paused';
+  else if(!RR.fixes) st='Looking for GPS…';
+  else if(now-RR.lastCb>8000) st='GPS signal lost';
+  $('rrSt').textContent=st;
+}
+function rrBuild(){
+  if(RR.el) return;
+  const el=document.createElement('div'); el.id='rrv';
+  el.innerHTML=`<div id="rrMap"></div>
+  <div class="rrTop"><button class="rrBtn" id="rrMapBtn" title="Map background on/off. Off uses no mobile data."></button><span id="rrSt"></span><span style="flex:1"></span><button class="rrBtn" id="rrPause">⏸ Pause</button><button class="rrBtn stop" id="rrStop">■ Stop</button></div>
+  <div class="dash"><div class="dchips">
+    <div class="tile pw" title="Estimated power from your speed, the slope and your weight (Rider settings). Dashed line = ride average, white tick = your FTP">
+      <div class="dr hr"><span class="hh">&#9829;&#xFE0E;</span><b id="rrHr">–</b></div>
+      <div class="vbar" id="rrBar"><div class="gbg"></div><div class="gfill" id="rrFill"></div><div class="gavg" id="rrAvg"></div></div>
+      <div class="dr dw"><b id="rrW">–</b><span>W*</span></div>
+    </div>
+    <div class="tile info">
+      <div class="dr"><em class="rrdot"></em><small class="rl">Time</small><b id="rrTime">0:00</b><span>rec</span></div>
+      <div class="dr"><small class="rl">Distance</small><b id="rrDist">0.00</b><span>km</span></div>
+      <div class="dr"><small class="rl">Grade</small><b id="rrGrade">0.0</b><span>%</span></div>
+      <div class="dr"><small class="rl">Speed</small><b id="rrSpd">0.0</b><span>km/h</span></div>
+    </div></div></div>
+  <div id="rrDlg" hidden><div class="rrBox"><b>Stop recording?</b><div id="rrDlgTxt"></div>
+    <button class="main" id="rrSave">Save to ride history</button><button class="main alt" id="rrKeep">Keep riding</button><button class="lnk" id="rrDisc">Discard this ride</button></div></div>`;
+  document.body.appendChild(el); RR.el=el;
+  const mb=$('rrMapBtn'), paintMb=()=>{ mb.textContent='🗺 Map '+(RR.mapOn?'on':'off'); mb.classList.toggle('dim',!RR.mapOn); };
+  paintMb();
+  mb.onclick=()=>{ RR.mapOn=!RR.mapOn; store.set('sr_rrmap',RR.mapOn?'1':'0'); paintMb(); rrTiles(); };
+  $('rrPause').onclick=()=>{
+    RR.paused=!RR.paused;
+    if(!RR.paused){ REC.last=null; RR.v=0; RR.a=0; RR.eb=[]; RR.wbuf=[]; RR.lastAcc=Date.now(); }   // resume: no distance jump across the pause
+    rrUpdate();
+  };
+  $('rrStop').onclick=()=>{
+    $('rrDlgTxt').textContent=recFmt(RR.act*1000)+' · '+(REC.dist/1000).toFixed(2)+' km';
+    $('rrDlg').hidden=false;
+  };
+  $('rrKeep').onclick=()=>{ $('rrDlg').hidden=true; };
+  $('rrSave').onclick=()=>{ $('rrDlg').hidden=true; recStop('save'); };
+  $('rrDisc').onclick=()=>{ $('rrDlg').hidden=true; recStop('discard'); };
+}
+function rrTiles(){
+  if(!RR.map||typeof L==='undefined') return;
+  if(RR.tiles){ RR.map.removeLayer(RR.tiles); RR.tiles=null; }
+  if(RR.mapOn){   // small low-zoom dark tiles, nothing pre-loaded off screen: light on data
+    RR.tiles=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,maxNativeZoom:16,keepBuffer:1,updateWhenIdle:true,attribution:'Tiles © Esri'}).addTo(RR.map);
+    RR.tiles.bringToBack();
+  }
+}
+function rrMove(p){
+  if(!RR.el||typeof L==='undefined') return;
+  const ll=[p.lat,p.lng];
+  if(!RR.map){
+    RR.map=L.map('rrMap',{zoomControl:false,attributionControl:true,zoomSnap:0.5,zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false}).setView(ll,16);
+    RR.map.attributionControl.setPrefix(false);
+    RR.map.on('movestart zoomstart',()=>{ if(!RR.prog) RR.userT=Date.now(); });
+    RR.casing=L.polyline([],{color:'#000',weight:9,opacity:.55,lineJoin:'round'}).addTo(RR.map);
+    RR.trail=L.polyline([],{color:'#1ff0e2',weight:5,opacity:.95,lineJoin:'round'}).addTo(RR.map);
+    RR.dot=L.circleMarker(ll,{radius:9,color:'#fff',weight:3,fillColor:'#c9694a',fillOpacity:1}).addTo(RR.map);
+    rrTiles();
+  }
+  const lt=RR.trailPts[RR.trailPts.length-1];
+  if(!lt||recHav({lat:lt[0],lng:lt[1]},p)>=4){ RR.trailPts.push(ll); RR.trail.addLatLng(ll); RR.casing.addLatLng(ll); }
+  RR.dot.setLatLng(ll);
+  if(Date.now()-RR.userT>8000){ RR.prog=true; RR.map.setView(ll,RR.map.getZoom(),{animate:false}); RR.map.panBy([0,Math.round(RR.map.getSize().y*0.16)],{animate:false}); RR.prog=false; }   // pinch or drag to look around, it follows you again after 8 s
+}
+function rrOpen(){
+  rrBuild(); RR.el.classList.add('on'); $('setup').style.display='none';
+  rrUpdate(); if(RR.map) setTimeout(()=>RR.map.invalidateSize(),50);
+}
+function rrHide(){
+  if(RR.el) RR.el.classList.remove('on');
+  if(RR.map){ RR.map.remove(); RR.map=null; RR.tiles=null; RR.trail=null; RR.casing=null; RR.dot=null; }
+  $('setup').style.display='flex'; try{ if(smap) smap.invalidateSize(); }catch(e){}
 }
 async function recWake(){ try{ if('wakeLock' in navigator) REC.wl=await navigator.wakeLock.request('screen'); }catch(e){} }
 function recStart(){
   if(!('geolocation' in navigator)){ $('recStat').textContent='This browser has no GPS access.'; return; }
   REC.pts=[]; REC.dist=0; REC.last=null; REC.t0=Date.now(); REC.name=($('recName').value||'Real ride').trim()||'Real ride'; REC.saveT=Date.now();
-  REC.wid=navigator.geolocation.watchPosition(recOnPos,e=>{ $('recStat').textContent='GPS problem: '+(e.code===1?'location permission was denied. Allow location for this page and try again.':e.message); if(e.code===1) recStop(true); },{enableHighAccuracy:true,maximumAge:0,timeout:30000});
-  REC.on=true; $('recBox').classList.add('on'); $('recBtn').textContent='■ Stop & save KML'; $('recGhost').disabled=true; $('recSaved').style.display='none';
-  REC.tick=setInterval(()=>recStatus(),1000); recWake(); recStatus('looking for GPS...');
+  Object.assign(RR,{on:true,paused:false,act:0,v:0,a:0,ele:null,grade:0,eb:[],samples:[],lastAcc:0,lastCb:Date.now(),fixes:0,sumW:0,cntW:0,wbuf:[],trailPts:[],userT:0});
+  REC.wid=navigator.geolocation.watchPosition(recOnPos,e=>{ $('recStat').textContent='GPS problem: '+(e.code===1?'location permission was denied. Allow location for this page and try again.':e.message); if(e.code===1) recStop('quiet'); },{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+  REC.on=true; $('recBox').classList.add('on'); $('recBtn').textContent='● Back to the recording'; $('recGhost').disabled=true; $('recSaved').style.display='none';
+  clearInterval(RR.tick); RR.tick=setInterval(rrTick,1000); recWake(); recStatus('looking for GPS...');
+  rrOpen();
+}
+async function rrSaveHistory(){
+  const s=RR.samples, st=computeStats({samples:s}), t0=REC.t0, ftp=ftpOf(0), mass=+$('mass0').value||85;
+  const raw=[]; let lp=null; REC.pts.forEach((p,i)=>{ if(!lp||recHav(lp,p)>=15||i===REC.pts.length-1){ raw.push([+p.lat.toFixed(6),+p.lng.toFixed(6),Math.round((p.ele||0)*10)/10]); lp=p; } });
+  const pid=R[0].profileId||null, pr=profList().find(x=>x.id===pid)||{};
+  await hTx('readwrite',x=>x.put({zones:zoneSecs(s,ftp),mass,ftp,id:t0+'_0',t:t0,name:R[0].name||'Rider 1',title:REC.name,real:true,estP:true,km:st.dist/1000,secs:st.secs,avgP:st.avgP,avgH:st.avgH,avgSpd:st.avgSpd,gain:st.gain,lat:raw[0][0],lng:raw[0][1],img:null,pid,pname:pr.name||null,route:{raw,cam:null},samples:s.slice()}));
+  try{ await refreshHist(); }catch(e){}
+  try{ gsSoon(); }catch(e){}
 }
 function recFinishFile(pts,name,t0){
   const kml=recKml(pts,name,t0), d=new Date(t0), pad=n=>String(n).padStart(2,'0');
@@ -4284,16 +4462,23 @@ function recFinishFile(pts,name,t0){
   $('recSaved').style.display=''; $('recSaved').textContent='Saved '+file+' to your downloads.'; $('recGhost').disabled=false;
   try{ localStorage.removeItem(recKey); }catch(e){}
 }
-function recStop(quiet){
+async function recStop(mode){
   if(!REC.on) return;
-  navigator.geolocation.clearWatch(REC.wid); clearInterval(REC.tick); REC.on=false;
+  navigator.geolocation.clearWatch(REC.wid); clearInterval(REC.tick); clearInterval(RR.tick); REC.on=false; RR.on=false;
   try{ if(REC.wl){ REC.wl.release(); REC.wl=null; } }catch(e){}
-  $('recBox').classList.remove('on'); $('recBtn').textContent='● Start recording';
-  if(REC.pts.length<5){ $('recStat').textContent='Recording was too short to save ('+REC.pts.length+' points).'; return; }
-  $('recStat').textContent='Stopped: '+(REC.dist/1000).toFixed(2)+' km in '+recFmt(REC.pts[REC.pts.length-1].t-REC.t0)+'.';
-  if(!quiet) recFinishFile(REC.pts,REC.name,REC.t0);
+  $('recBox').classList.remove('on'); $('recBtn').textContent='● Start Ride Recording!';
+  rrHide();
+  if(mode==='quiet') return;                                 // GPS problem: keep the backup so it can be recovered
+  try{ localStorage.removeItem(recKey); }catch(e){}
+  if(mode==='discard'){ $('recStat').textContent='Recording discarded.'; return; }
+  if(RR.samples.length<5||REC.pts.length<5){ $('recStat').textContent='Recording was too short to save.'; return; }
+  $('recStat').textContent='Stopped: '+(REC.dist/1000).toFixed(2)+' km in '+recFmt(RR.act*1000)+'.';
+  REC.lastKml=recKml(REC.pts,REC.name,REC.t0);
+  try{ await rrSaveHistory(); $('recSaved').textContent='Saved to your ride history. Open Route history and tap ⬇ Track to download it.'; $('recGhost').disabled=false; }
+  catch(e){ $('recSaved').textContent='Could not save to history ('+(e&&e.message||e)+').'; }
+  $('recSaved').style.display='';
 }
-$('recBtn').onclick=()=>{ REC.on?recStop():recStart(); };
+$('recBtn').onclick=()=>{ REC.on?rrOpen():recStart(); };
 $('recGhost').onclick=()=>{ try{ ghost=parseGhostKml(REC.lastKml); ghost.ok=false; bindGhost(); $('btnGhostClear').style.display=''; say('Ghost loaded: '+ghost.name); $('recSaved').textContent='Loaded as your ghost rider. Build or load a route near it to race it.'; }catch(e){ $('recSaved').textContent=e.message; } };
 addEventListener('visibilitychange',()=>{ if(REC.on && document.visibilityState==='visible') recWake(); });
 addEventListener('beforeunload',e=>{ if(REC.on){ recSaveBackup(); e.preventDefault(); e.returnValue=''; } });
