@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.25 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.27 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -99,6 +99,12 @@
   html{font-variant-emoji:text;} body{font-variant-emoji:text;}
   .ic{display:inline-block;width:1.1em;height:1.1em;vertical-align:-.17em;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;margin-right:.2em;}
   .hpin .ic{width:26px;height:26px;margin:0;color:#e5826b;} .hpin .ic[data-i=star]{color:#ffcc33;}
+  #rhead0 .av,#rhead1 .av{margin:0 7px 0 3px;transition:box-shadow .3s;}
+  .av.ring-ok{box-shadow:0 0 0 2px #1c0f0b,0 0 0 4px #2dd4bf;}
+  .av.ring-busy{box-shadow:0 0 0 2px #1c0f0b,0 0 0 4px #2dd4bf;animation:ringp 1s ease-in-out infinite;}
+  .av.ring-err{box-shadow:0 0 0 2px #1c0f0b,0 0 0 4px #e0705a;}
+  .av.ring-off{box-shadow:0 0 0 2px #1c0f0b,0 0 0 4px rgba(255,255,255,.18);}
+  @keyframes ringp{0%,100%{box-shadow:0 0 0 2px #1c0f0b,0 0 0 4px rgba(45,212,191,.35);}50%{box-shadow:0 0 0 2px #1c0f0b,0 0 0 5px #2dd4bf;}}
   .av{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;overflow:hidden;background:var(--teal);color:#06302e;font-weight:700;vertical-align:-4px;margin-right:5px;flex:none;line-height:1;}
   .av img{width:100%;height:100%;object-fit:cover;display:block;}
   .pin{width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-sizing:border-box;background:#2a1a14;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font:700 12px system-ui;box-shadow:0 0 0 1px rgba(0,0,0,.4);}
@@ -403,6 +409,10 @@
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
   /* ---- phone layout (v2.4) ---- */ html,body{overscroll-behavior:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
   body.phone{font-size:15px;position:fixed;inset:0;width:100%;height:100%;}
+  #chin{display:none;position:fixed;z-index:61;width:60px;height:22px;margin-left:-30px;flex-direction:column;align-items:center;justify-content:center;gap:4px;touch-action:none;cursor:grab;background:rgba(40,18,12,.94);border:1px solid var(--line);border-top:0;border-radius:0 0 14px 14px;box-shadow:0 3px 8px rgba(0,0,0,.35);-webkit-tap-highlight-color:transparent;}
+  #chin i{display:block;width:26px;height:2.5px;border-radius:2px;background:rgba(255,230,215,.75);}
+  #chin.drag{background:rgba(70,32,22,.96);}
+  body.phone #chin{display:flex;}
   body.phone #panel.compact #ptitle{display:none;}
   body.phone #panel.compact #phead{justify-content:flex-end;}
   body.phone #stage{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);}
@@ -481,8 +491,9 @@
 <div id="mini"><div id="miniMap"></div><div id="miniCountry"></div><div class="mb"><button id="miniSat" title="Satellite on/off">🛰</button><button id="miniFollow" title="Follow rider / show whole route">⌖</button><button id="miniHide" title="Hide minimap (M)">×</button></div></div>
 <button id="miniShow">🗺 map</button>
 
+<div id="chin" role="button" aria-label="Swipe down to open the menu, up to hide it" title="Swipe or tap"><i></i><i></i></div>
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.25</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.27</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
 
   <h3>Connect</h3>
   <div id="riderCtl"></div>
@@ -651,7 +662,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.25';
+const APP_VER='1.27';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -829,7 +840,7 @@ function drawPin(ctx,dpr,px,py,color,name,pic){
   ctx.beginPath(); ctx.arc(px,py,rad,0,7); ctx.strokeStyle='#fff'; ctx.lineWidth=2*dpr; ctx.stroke(); ctx.restore();
 }
 function applyNames(){
-  R.forEach(r=>{ const v=$('rname'+r.i).value.trim(); r.name=v||('Rider '+(r.i+1)); const pic=riderPic(r); $('tag'+r.i).innerHTML=avHtml(r.name,pic,16)+esc(r.name); let pr=null; try{ pr=r.profileId?profList().find(x=>x.id===r.profileId):null; }catch(e){} const hn=pr?pr.name:r.name; $('rhead'+r.i).innerHTML=avHtml(hn,pic,18)+esc(hn); });
+  R.forEach(r=>{ const v=$('rname'+r.i).value.trim(); r.name=v||('Rider '+(r.i+1)); const pic=riderPic(r); $('tag'+r.i).innerHTML=avHtml(r.name,pic,16)+esc(r.name); let pr=null; try{ pr=r.profileId?profList().find(x=>x.id===r.profileId):null; }catch(e){} const hn=pr?pr.name:r.name; $('rhead'+r.i).innerHTML=avHtml(hn,pic,18)+esc(hn); try{ ringApply(); }catch(e){} });
   applySwap();
 }
 function applySwap(){
@@ -2160,6 +2171,12 @@ R.forEach(r=>{ if(r.profileId) chooseProfile(r.i,r.profileId); });
 /* ---------- Google sync: route history + profiles kept in a private app folder in your own Google Drive ---------- */
 const GS={cid:store.get('sr_gcid')||gcCfg().clientId||'',on:store.get('sr_gsync')==='1',tok:null,exp:0,busy:false,err:false,last:+store.get('sr_glast')||0,timer:null,pic:store.get('sr_gpic')||''};
 const GS_SCOPE='https://www.googleapis.com/auth/drive.appdata openid email profile';
+function ringApply(){
+  R.forEach(rr=>{ const h=$('rhead'+rr.i), el=h&&h.querySelector('.av'); if(!el) return;
+    const mine=gsOnFor(rr.i), st=!mine?'off':GS.busy?'busy':GS.err?'err':'ok';
+    el.classList.remove('ring-ok','ring-busy','ring-err','ring-off'); el.classList.add('ring-'+st);
+    el.title=st==='off'?'Not syncing this profile':st==='busy'?'Syncing…':st==='err'?'Sync problem: '+(GS.msg||'tap the Sync button in Profile'):'Synced with Google'+(GS.last?' · '+new Date(GS.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''); });
+}
 const gsProf=i=>profList().find(p=>p.id===R[i].profileId);
 const gsOnFor=i=>{ const p=gsProf(i); return !!(GS.on&&p&&p.sync===true); };
 function gsUi(){
@@ -2170,6 +2187,7 @@ function gsUi(){
     b.setAttribute('aria-pressed',mine?'true':'false'); b.classList.toggle('busy',GS.busy&&mine); b.classList.toggle('err',mine&&GS.err&&!GS.busy);
     b.title=!mine?'Sync this profile and its rides with your Google account (kept in your own Drive; other profiles on this device are not uploaded). Shift-click to change the client ID.':
       GS.busy?'Syncing…':GS.err?'Sync problem: '+(GS.msg||'tap to sign in again'):'This profile syncs'+(GS.last?' · last '+new Date(GS.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'')+'. Tap to stop syncing it.'; });
+  try{ ringApply(); }catch(e){}
 }
 function gsLoadLib(){ return new Promise((ok,no)=>{ if(window.google&&google.accounts&&google.accounts.oauth2) return ok(); const sc=document.createElement('script'); sc.src='https://accounts.google.com/gsi/client'; sc.onload=ok; sc.onerror=()=>no(new Error('Could not reach Google (offline?)')); document.head.appendChild(sc); }); }
 async function gsToken(interactive){
@@ -4012,6 +4030,23 @@ setTimeout(async()=>{
     if(Date.now()-last<2500){ armed=false; history.back(); return; }
     last=Date.now(); toast('Press back again to leave Street-Ride',2200); again();
   });
+})();
+
+/* swipeable chin under the menu: swipe up hides it, swipe down shows it, tap toggles (phones) */
+(function(){
+  const c=$('chin'), p=$('panel'); if(!c||!p) return;
+  function place(){ if(!document.body.classList.contains('phone')) return; const b=p.getBoundingClientRect(); c.style.top=Math.round(b.bottom)+'px'; c.style.left=Math.round(b.left+b.width/2)+'px'; }
+  const setCollapsed=on=>{ p.classList.remove('compact'); p.classList.toggle('collapsed',on); p._auto=false; updToggle(); place(); };
+  let y0=null,moved=false;
+  c.addEventListener('pointerdown',e=>{ y0=e.clientY; moved=false; c.classList.add('drag'); try{ c.setPointerCapture(e.pointerId); }catch(err){} e.preventDefault(); });
+  c.addEventListener('pointermove',e=>{ if(y0!=null&&Math.abs(e.clientY-y0)>6) moved=true; });
+  const end=e=>{ if(y0==null) return; const dy=e.clientY-y0; y0=null; c.classList.remove('drag');
+    if(dy<-22) setCollapsed(true); else if(dy>22) setCollapsed(false); else if(!moved) setCollapsed(!p.classList.contains('collapsed')); };
+  c.addEventListener('pointerup',end); c.addEventListener('pointercancel',()=>{ y0=null; c.classList.remove('drag'); });
+  try{ new ResizeObserver(place).observe(p); }catch(e){}
+  addEventListener('resize',place); addEventListener('orientationchange',()=>setTimeout(place,300)); p.addEventListener('scroll',place,{passive:true});
+  const ut=updToggle; window.updToggle=function(){ ut(); requestAnimationFrame(place); };
+  setTimeout(place,300); setInterval(place,1500);
 })();
 $('ftpFs').onclick=toggleFs; showFsMode();
 document.addEventListener('fullscreenchange',()=>{
