@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.55 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.57 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -383,6 +383,10 @@
   .tgl.clk{cursor:pointer;}.tgl .mut{opacity:.6;font-size:11px;}
   #connMore{margin:4px 0;}
   #connMore #mpDet{background:var(--surface);border-radius:var(--r);padding:0 10px;margin:3px 0;}
+  #connMore .tgl, body #connMore details#mpDet>summary{min-height:32px;box-sizing:border-box;}
+  body #connMore details#mpDet>summary{display:flex;align-items:center;gap:8px;padding-top:0;padding-bottom:0;}
+  body.phone #connMore .tgl, body.phone #connMore details#mpDet>summary{min-height:46px;}
+  body.phone #connMore .tgl{padding-top:0;padding-bottom:0;}
   .rhrow{display:flex;align-items:baseline;justify-content:space-between;gap:8px;}
   .rhrow .lnk{font-size:12px;padding:2px 0;}
   .rhrow .lnk[id^=profTog]{color:#fff;display:inline-flex;align-items:center;gap:6px;}
@@ -507,6 +511,7 @@
   body.phone:has(#panel.collapsed) #mini,body.phone:has(#panel.collapsed) #miniShow{top:74px;}
   body #panel.collapsed{background:rgba(40,18,12,.95);border:1px solid var(--line);border-radius:14px;padding:5px 5px 0;}
   body #panel.collapsed #phead{border:0;background:none;padding:0;margin:0;}
+  body #panel.collapsed #phead{touch-action:none;}
   body #panel.collapsed #toggle{background:none;border:0;padding:6px 12px;}
   body #panel.collapsed #grip{position:static;margin:0 -5px;height:20px;}
 </style>
@@ -521,7 +526,7 @@
 
 <div id="tut" role="dialog" aria-modal="true" aria-label="Quick tour"><div class="card"><div class="tic" id="tutIc"></div><h3 id="tutH"></h3><div id="tutB"></div><div class="dots" id="tutD"></div><div class="row"><button class="lnk" id="tutSkip">Skip</button><button class="lnk" id="tutBack">Back</button><button class="main" id="tutNext">Next</button></div></div></div>
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.55</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.57</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
 
   <h3 class="hq">Connect<button id="tutQ" type="button" title="Quick tour" aria-label="Quick tour">?</button></h3>
   <div id="riderCtl"></div>
@@ -692,7 +697,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.55';
+const APP_VER='1.57';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -4187,7 +4192,8 @@ setTimeout(async()=>{
   function wire(el,onEnd,cap){ let y0=null; el.addEventListener('pointerdown',e=>{ y0=e.clientY; if(cap){ el.classList.add('drag'); try{ el.setPointerCapture(e.pointerId); }catch(x){} } });
     const end=e=>{ if(y0==null) return; const dy=e.clientY-y0; y0=null; el.classList.remove('drag'); onEnd(dy); };
     if(cap){ el.addEventListener('pointerup',end); el.addEventListener('pointercancel',()=>{ y0=null; el.classList.remove('drag'); }); }
-    else { addEventListener('pointerup',end); addEventListener('pointercancel',()=>{ y0=null; }); } }   // no pointer capture here, so buttons inside still get their clicks
+    else { addEventListener('pointerup',end); addEventListener('pointercancel',()=>{ y0=null; });
+      addEventListener('pointermove',e=>{ if(y0!=null && e.clientY-y0>18){ const dy=e.clientY-y0; y0=null; onEnd(dy); } }); } }   // fire as soon as the swipe is long enough, before the browser takes over the touch   // no pointer capture here, so buttons inside still get their clicks
   wire(g,dy=>{ const col=p.classList.contains('collapsed'); if(dy<-18&&!col) setCollapsed(true); else if(dy>18&&col) setCollapsed(false); else if(Math.abs(dy)<=6) setCollapsed(!col); },true);
   const ph=$('phead'); if(ph) wire(ph,dy=>{ if(dy>18&&p.classList.contains('collapsed')) setCollapsed(false); },false);
 })();
