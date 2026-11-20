@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.40 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.43 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -427,6 +427,7 @@
   #tut .row{display:flex;gap:8px;justify-content:space-between;align-items:center;}
   #tut .row button.lnk{opacity:.8;}
   #tut .row .main{flex:1;max-width:160px;}
+  #panel > h3.hq{display:flex;align-items:center;justify-content:space-between;}
   #tutQ{width:18px;height:18px;padding:0;margin:0;border-radius:50%;border:1px solid var(--line);background:none;color:inherit;font:600 11px/1 inherit;opacity:.55;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
   #tutQ:hover{opacity:.95;}
   #grip{display:flex;}
@@ -515,9 +516,9 @@
 
 <div id="tut" role="dialog" aria-modal="true" aria-label="Quick tour"><div class="card"><div class="tic" id="tutIc"></div><h3 id="tutH"></h3><div id="tutB"></div><div class="dots" id="tutD"></div><div class="row"><button class="lnk" id="tutSkip">Skip</button><button class="lnk" id="tutBack">Back</button><button class="main" id="tutNext">Next</button></div></div></div>
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.40</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.43</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
 
-  <h3 style="display:flex;align-items:center;justify-content:space-between">Connect<button id="tutQ" type="button" title="Quick tour" aria-label="Quick tour">?</button></h3>
+  <h3 class="hq">Connect<button id="tutQ" type="button" title="Quick tour" aria-label="Quick tour">?</button></h3>
   <div id="riderCtl"></div>
   <details class="more" id="connMore"><summary title="Split screen, online riding, ghost rider">···</summary>
   <div id="spRow" class="tgl"><span>◫ Split screen</span><span style="flex:1"></span><button class="swapb" id="btnSwap" title="Swap which rider is on the left and right screen" style="display:none">⇄ swap</button><button class="sw" id="spSw" role="switch" aria-checked="false" aria-label="Split screen: two riders on one screen"></button></div>
@@ -686,7 +687,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.40';
+const APP_VER='1.43';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -1753,8 +1754,8 @@ async function gcDb(path,method,body){
   const t=await gcFresh(), r=await fetch(gcCfg().dbUrl+'/'+path+'.json?auth='+encodeURIComponent(t),{method:method||'GET',body:body===undefined?undefined:JSON.stringify(body)});
   if(!r.ok) throw new Error('Lobby error '+r.status+(r.status===401||r.status===403?' (check the database rules)':'')); return r.json();
 }
-async function gcExchange(cred){
-  const c=gcCfg(), r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key='+encodeURIComponent(c.apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({postBody:'id_token='+cred+'&providerId=google.com',requestUri:location.origin&&location.origin!=='null'?location.origin:'http://localhost',returnIdpCredential:true,returnSecureToken:true})});
+async function gcExchange(cred,kind){
+  const c=gcCfg(), r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key='+encodeURIComponent(c.apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({postBody:(kind||'id_token')+'='+cred+'&providerId=google.com',requestUri:location.origin&&location.origin!=='null'?location.origin:'http://localhost',returnIdpCredential:true,returnSecureToken:true})});
   const j=await r.json(); if(!r.ok||!j.idToken) throw new Error((j.error&&j.error.message)||'Sign-in failed');
   gcSt.tok=j.idToken; gcSt.exp=Date.now()+(+j.expiresIn||3600)*1000; gcSt.ref=j.refreshToken; store.set('sr_gref',gcSt.ref); gcSt.user=j.localId; gcSt.email=(j.email||'').toLowerCase(); store.set('sr_gemail',gcSt.email);
   if(j.photoUrl&&!GS.pic){ GS.pic=j.photoUrl; store.set('sr_gpic',GS.pic); gsUi(); }
@@ -1767,6 +1768,16 @@ function gcUi(){
   if(!ready) mpStat('Group ride needs the one-time setup below (or use a code).');
   const hb=$('gcHost'); hb.textContent=mp.hosting?'Stop hosting':'Host group ride'; hb.classList.toggle('red',!!mp.hosting);
   gcChips();
+}
+async function gcAuto(){                               // a synced profile already signed in to Google needs no second sign-in for group rides
+  if(!gcReady()||gcSt.autoBusy||mp.sess||mp.hosting) return;
+  const p=gsProf(0); if(!p||p.sync!==true||!p.acct) return; const A=gsAcct(p.acct); if(!gsValid(A)) return;
+  if(gcSt.user&&gcSt.email===p.acct.toLowerCase()) return;
+  if(gcSt._failA===p.acct&&Date.now()-(gcSt._failT||0)<120000) return;
+  gcSt.autoBusy=true;
+  try{ if(gcSt.user){ clearInterval(gcSt.timer); gcSt.inv={}; gcSt.members=null; } await gcExchange(A.tok,'access_token'); dlog('group','signed in with the profile\'s Google account '+p.acct); }
+  catch(e){ gcSt._failA=p.acct; gcSt._failT=Date.now(); dlog('group','could not reuse the Google sign-in ('+e.message+'); use the Sign in button'); }
+  gcSt.autoBusy=false;
 }
 async function gcRenderBtn(){
   if(!gcReady()||gcSt.user||gcSt.btn) return;
@@ -2197,39 +2208,59 @@ refreshProfSelects();
 R.forEach(r=>{ if(r.profileId) chooseProfile(r.i,r.profileId); });
 
 /* ---------- Google sync: route history + profiles kept in a private app folder in your own Google Drive ---------- */
-const GS={cid:store.get('sr_gcid')||gcCfg().clientId||'',on:store.get('sr_gsync')==='1',tok:null,exp:0,busy:false,err:false,last:+store.get('sr_glast')||0,timer:null,pic:store.get('sr_gpic')||''};
+const GS={A:{},cur:'',cid:store.get('sr_gcid')||gcCfg().clientId||'',on:store.get('sr_gsync')==='1',tok:null,exp:0,busy:false,err:false,last:+store.get('sr_glast')||0,timer:null,pic:store.get('sr_gpic')||''};
 const GS_SCOPE='https://www.googleapis.com/auth/drive.appdata openid email profile';
+const gsPics=()=>{ try{ return JSON.parse(store.get('sr_gpics')||'{}'); }catch(e){ return {}; } };
+function gsAcct(a){ return GS.A[a]||(GS.A[a]={pic:gsPics()[a]||''}); }
+const gsValid=A=>!!(A&&A.tok&&Date.now()<A.exp-60000);
+function gsState(i){                                   // off | busy | err | ok, for the profile picked by rider i
+  const p=gsProf(i); if(!(GS.on&&p&&p.sync===true)) return 'off';
+  const a=p.acct, A=a&&gsAcct(a);
+  if(GS.busy&&GS.cur===a) return 'busy';
+  return (a&&gsValid(A)&&!A.err)?'ok':'err';
+}
+function gsMsg(i){ const p=gsProf(i), A=p&&p.acct&&gsAcct(p.acct); if(!p||!p.acct) return 'Signed out of Google · tap to sign in'; if(A&&A.err) return A.msg==='Signed out'?'Signed out of Google · tap to sign in':'Sync problem: '+(A.msg||'tap to sign in again'); return ''; }
 function ringApply(){
   R.forEach(rr=>{ const h=$('rhead'+rr.i), el=h&&h.querySelector('.av'); if(!el) return;
-    const mine=gsOnFor(rr.i), st=!mine?'off':GS.busy?'busy':GS.err?'err':'ok';
+    const st=gsState(rr.i), p=gsProf(rr.i), A=p&&p.acct?gsAcct(p.acct):null;
     el.classList.remove('ring-ok','ring-busy','ring-err','ring-off'); el.classList.add('ring-'+st);
-    el.title=st==='off'?'Not syncing this profile':st==='busy'?'Syncing…':st==='err'?(GS.msg==='Signed out'?'Signed out of Google · tap to sign in':'Sync problem: '+(GS.msg||'tap the Sync button in Profile')):'Synced with Google'+(GS.last?' · '+new Date(GS.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''); });
+    el.title=st==='off'?'Not syncing this profile':st==='busy'?'Syncing…':st==='err'?gsMsg(rr.i):'Synced with '+(p.acct||'Google')+(A&&A.last?' · '+new Date(A.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''); });
 }
 const gsProf=i=>profList().find(p=>p.id===R[i].profileId);
 const gsOnFor=i=>{ const p=gsProf(i); return !!(GS.on&&p&&p.sync===true); };
 function gsUi(){
-  R.forEach(r=>{ const b=$('gsb'+r.i); if(!b) return; const mine=gsOnFor(r.i);
+  R.forEach(r=>{ const b=$('gsb'+r.i); if(!b) return; const st=gsState(r.i), mine=st!=='off', p=gsProf(r.i), A=p&&p.acct?gsAcct(p.acct):null;
     if(!b._orig) b._orig=b.innerHTML;
-    const av=mine&&GS.pic; const want=av?'av':'pill';
-    if(b._mode!==want||(av&&b._pic!==GS.pic)){ b._mode=want; b._pic=GS.pic; b.classList.toggle('gsav',!!av); b.innerHTML=av?'<img src="'+esc(GS.pic)+'" alt="Google account" referrerpolicy="no-referrer" width="24" height="24">':b._orig; }
-    b.setAttribute('aria-pressed',mine?'true':'false'); b.classList.toggle('busy',GS.busy&&mine); b.classList.toggle('err',mine&&GS.err&&!GS.busy);
-    b.title=!mine?'Sync this profile and its rides with your Google account (kept in your own Drive; other profiles on this device are not uploaded). Shift-click to change the client ID.':
-      GS.busy?'Syncing…':GS.err?'Sync problem: '+(GS.msg||'tap to sign in again'):'This profile syncs'+(GS.last?' · last '+new Date(GS.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'')+'. Tap to stop syncing it.'; });
+    const pic=mine?((p&&p.pic)||(A&&A.pic)||''):''; const want=pic?'av':'pill';
+    if(b._mode!==want||(pic&&b._pic!==pic)){ b._mode=want; b._pic=pic; b.classList.toggle('gsav',!!pic); b.innerHTML=pic?'<img src="'+esc(pic)+'" alt="Google account" referrerpolicy="no-referrer" width="24" height="24">':b._orig; }
+    b.setAttribute('aria-pressed',mine?'true':'false'); b.classList.toggle('busy',st==='busy'); b.classList.toggle('err',st==='err');
+    b.title=!mine?'Sync this profile and its rides with a Google account (kept in that account\'s own Drive; each Google account holds one profile). Shift-click to change the client ID.':
+      st==='busy'?'Syncing…':st==='err'?gsMsg(r.i):'This profile syncs with '+(p.acct||'Google')+(A&&A.last?' · last '+new Date(A.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'')+'. Tap to stop syncing it.'; });
   try{ ringApply(); }catch(e){}
+  try{ gcAuto(); }catch(e){}
 }
 function gsLoadLib(){ return new Promise((ok,no)=>{ if(window.google&&google.accounts&&google.accounts.oauth2) return ok(); const sc=document.createElement('script'); sc.src='https://accounts.google.com/gsi/client'; sc.onload=ok; sc.onerror=()=>no(new Error('Could not reach Google (offline?)')); document.head.appendChild(sc); }); }
-async function gsToken(interactive){
-  if(GS.tok&&Date.now()<GS.exp-60000) return GS.tok;
+async function gsSignIn(hint){
   await gsLoadLib();
-  return new Promise((ok,no)=>{
-    const tc=google.accounts.oauth2.initTokenClient({client_id:GS.cid,scope:GS_SCOPE,callback:r=>{ if(r.error||!r.access_token) return no(new Error(r.error_description||r.error||'Sign-in failed')); GS.tok=r.access_token; GS.exp=Date.now()+(+r.expires_in||3600)*1000; ok(GS.tok); },error_callback:e=>no(new Error((e&&e.type)||'Sign-in cancelled'))});
-    tc.requestAccessToken({prompt:interactive?(GS.hinted?'':'select_account'):'none'});
-  });
+  const t=await new Promise((ok,no)=>{
+    const tc=google.accounts.oauth2.initTokenClient({client_id:GS.cid,scope:GS_SCOPE,callback:r=>{ if(r.error||!r.access_token) return no(new Error(r.error_description||r.error||'Sign-in failed')); let nd=false; try{ nd=!google.accounts.oauth2.hasGrantedAllScopes(r,'https://www.googleapis.com/auth/drive.appdata'); }catch(e){} ok({tok:r.access_token,exp:Date.now()+(+r.expires_in||3600)*1000,noDrive:nd}); },error_callback:e=>no(new Error((e&&e.type)||'Sign-in cancelled'))});
+    tc.requestAccessToken(hint?{prompt:'',login_hint:hint}:{prompt:'select_account'}); });
+  const u=await (await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+t.tok}})).json();
+  const email=String(u.email||'').toLowerCase(); if(!email) throw new Error('Google did not say which account that was');
+  if(hint&&email!==String(hint).toLowerCase()) throw new Error('You signed in as '+email+', but this profile syncs with '+hint+'. Please sign in with '+hint+'.');
+  const A=gsAcct(email); Object.assign(A,{tok:t.tok,exp:t.exp,noDrive:t.noDrive,pic:u.picture||A.pic||'',err:false,msg:''});
+  if(A.pic){ const m=gsPics(); m[email]=A.pic; store.set('sr_gpics',JSON.stringify(m)); }
+  if(t.noDrive) dlog('sync','Sign-in as '+email+' did not include the Drive permission');
+  dlog('sync','Signed in as '+email);
+  return {email,A};
 }
 async function gsApi(url,opt){
   const o=opt||{}, r=await fetch(url,{method:o.method||'GET',headers:{Authorization:'Bearer '+GS.tok,...(o.headers||{})},body:o.body});
   if(r.status===401){ GS.tok=null; throw new Error('Google sign-in expired'); }
-  if(!r.ok) throw new Error('Google Drive error '+r.status);
+  if(!r.ok){ let why='',reason=''; try{ const j=await r.clone().json(); reason=((j.error&&j.error.errors&&j.error.errors[0]&&j.error.errors[0].reason)||(j.error&&j.error.status)||''); why=(j.error&&j.error.message)||''; }catch(e){}
+    dlog('sync','Drive '+r.status+' '+reason+' '+why);
+    if(r.status===403){ if(GS.noDrive||/insufficient|scope/i.test(reason+why)) throw new Error('Google did not give access to the Drive box. Tap your profile pic, sign in again and tick every box, including “See and manage its own configuration data in your Google Drive”.'); if(/accessNotConfigured|has not been used|disabled/i.test(reason+why)) throw new Error('The Google Drive API is switched off in your Google Cloud project (Library > Google Drive API > Enable).'); }
+    throw new Error('Google Drive error '+r.status+(reason?' ('+reason+')':'')); }
   return o.raw?r:(r.status===204?null:r.json());
 }
 async function gsList(){ const out=[]; let pt=''; do{ const j=await gsApi('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=1000&fields=nextPageToken,files(id,name,modifiedTime)'+(pt?'&pageToken='+encodeURIComponent(pt):'')); out.push(...j.files); pt=j.nextPageToken; }while(pt); return out; }
@@ -2244,73 +2275,100 @@ async function gsPut(name,obj,id){
 const gsTombs=()=>{ try{ return JSON.parse(store.get('sr_gdel')||'{}'); }catch(e){ return {}; } };
 function gsTomb(ids){ const t=gsTombs(); ids.forEach(id=>{ t[id]=Date.now(); }); store.set('sr_gdel',JSON.stringify(t)); gsSoon(); }
 function gsSoon(){ if(!GS.on) return; clearTimeout(GS.timer); GS.timer=setTimeout(()=>gsSync(false),4000); }
-async function gsSync(interactive){
+async function gsSync(interactive,only){
   if(!GS.on||!GS.cid||GS.busy) return;
-  if(!interactive&&!(GS.tok&&Date.now()<GS.exp-60000)){ if(!GS.err||GS.msg!=='Signed out'){ GS.err=true; GS.msg='Signed out'; dlog('sync','Signed out: waiting for a tap on your profile pic'); gsUi(); } return; }   // no silent pop-up: it never works on phones
+  const accts=only?[only]:[...new Set(profAll().filter(p=>!p.del&&p.acct&&(p.sync===true||p.sync===false)).map(p=>p.acct))];
+  if(!accts.length){ if(profList().some(p=>p.sync===true&&!p.acct)&&!GS.legLog){ GS.legLog=1; dlog('sync','Signed out: tap your profile pic to sign in'); } gsUi(); return; }
   GS.busy=true; gsUi();
+  for(const a of accts){ await gsSyncOne(a,interactive); }
+  GS.busy=false; gsUi();
+}
+async function gsSyncOne(a,interactive){
+  const A=gsAcct(a); GS.cur=a; GS.tok=null;
   try{
-    await gsToken(interactive);
-    if(!GS.pic){ try{ const u=await (await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+GS.tok}})).json(); if(u&&u.picture){ GS.pic=u.picture; store.set('sr_gpic',GS.pic); gsUi(); } }catch(e){} }
+    if(!gsValid(A)){
+      if(!interactive){ if(!A.err||A.msg!=='Signed out'){ A.err=true; A.msg='Signed out'; dlog('sync','Signed out of '+a+': waiting for a tap on your profile pic'); gsUi(); } return; }   // no silent pop-up: it never works on phones
+      await gsSignIn(a);
+    }
+    GS.tok=A.tok; GS.exp=A.exp; GS.pic=A.pic; GS.noDrive=A.noDrive;
     const files=await gsList(), byName={}; files.forEach(f=>{ byName[f.name]=f; });
-    const nRemoteRides=files.filter(f=>/^ride_/.test(f.name)).length; dlog('sync','Drive has '+nRemoteRides+' rides, profiles.json '+(byName['profiles.json']?'yes':'no'));
+    const nRemoteRides=files.filter(f=>/^ride_/.test(f.name)).length; dlog('sync',a+': Drive has '+nRemoteRides+' rides, profiles.json '+(byName['profiles.json']?'yes':'no'));
     // deletions (kept as a small list so every device learns about them)
     const tomb=gsTombs(); if(byName['deleted.json']){ try{ Object.assign(tomb,await gsGet(byName['deleted.json'].id),gsTombs()); }catch(e){} }
     let nUp=0,nDown=0;
     const all=await hTx('readonly',st=>st.getAll())||[], local={}; all.forEach(x=>{ local[x.id]=x; });
     for(const id of Object.keys(tomb)){ if(local[id]){ await hTx('readwrite',st=>st.delete(id)); delete local[id]; nDown++; } const f=byName['ride_'+id+'.json']; if(f){ await gsApi('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE'}); delete byName['ride_'+id+'.json']; } }
     store.set('sr_gdel',JSON.stringify(tomb));
-    const tj=JSON.stringify(tomb); if(Object.keys(tomb).length){ const r=await gsPut('deleted.json',tomb,byName['deleted.json']&&byName['deleted.json'].id); byName['deleted.json']={id:r.id,name:'deleted.json'}; }
-    // profiles: only profiles you switched Sync on for are kept in Drive; switched-off ones are scrubbed to a bare marker
-    const loc=profAll(), pf=byName['profiles.json']; let rem=[]; if(pf){ try{ rem=await gsGet(pf.id); }catch(e){} }
+    if(Object.keys(tomb).length){ const r=await gsPut('deleted.json',tomb,byName['deleted.json']&&byName['deleted.json'].id); byName['deleted.json']={id:r.id,name:'deleted.json'}; }
+    // profiles: this Google account holds only the profile(s) linked to it; everything else stays out of it
+    const locAll=profAll(), pf=byName['profiles.json']; let rem=[]; if(pf){ try{ rem=await gsGet(pf.id); }catch(e){} }
+    const locOther=locAll.filter(p=>p.acct!==a);
+    rem=rem.map(p=>(p.sync===true&&!p.del&&!p.acct)?{...p,acct:a}:p).filter(q=>!locOther.some(o=>o.id===q.id&&o.sync===true&&o.acct));   // older uploads belong to this account; skip ones another account owns
     const mp={}; rem.forEach(p=>{ mp[p.id]=p; });
-    loc.forEach(p=>{ const q=mp[p.id];
+    locAll.filter(p=>p.acct===a).forEach(p=>{ const q=mp[p.id];
       if(!q||(p.u||0)>=(q.u||0)) mp[p.id]=p;
       else if(q.sync===false&&!q.name) mp[p.id]={...p,sync:false,u:q.u};          // another device stopped syncing it: keep my copy local
       else mp[p.id]=q; });
     const merged=Object.values(mp); merged.forEach(p=>{ if(p.sync===true&&!p.del&&GS.pic&&!p.pic){ p.pic=GS.pic; p.u=Date.now(); } });
-    const same=(a,b)=>JSON.stringify([...a].sort((x,y)=>x.id<y.id?-1:1))===JSON.stringify([...b].sort((x,y)=>x.id<y.id?-1:1));
-    if(!same(merged,loc)){ profSave(merged); refreshProfSelects(); }
+    const same=(x,y)=>JSON.stringify([...x].sort((m,n)=>m.id<n.id?-1:1))===JSON.stringify([...y].sort((m,n)=>m.id<n.id?-1:1));
+    const full=[...merged,...locOther.filter(o=>!mp[o.id])];
+    if(!same(full,locAll)){ profSave(full); refreshProfSelects(); }
     const up=merged.map(p=>p.del?{id:p.id,del:true,u:p.u||0}:(p.sync!==true?{id:p.id,sync:false,u:p.u||0}:p));
     if(!pf||!same(up,rem)) await gsPut('profiles.json',up,pf&&pf.id);
     const pmap={}; merged.forEach(p=>{ pmap[p.id]=p; });
-    const ridesOk=rec=>!!(rec.pid&&pmap[rec.pid]&&!pmap[rec.pid].del&&pmap[rec.pid].sync===true);
+    const ridesOk=rec=>{ const p=rec.pid&&pmap[rec.pid]; return !!(p&&!p.del&&p.sync===true&&p.acct===a); };
     // rides: new ones go up, new ones come down, edits (favourite, name) follow the newest change
     for(const id of Object.keys(local)){ const rec=local[id], f=byName['ride_'+id+'.json'];
       if(!ridesOk(rec)){ if(f){ await gsApi('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE'}); delete byName['ride_'+id+'.json']; } continue; }
       if(!f||((rec.mod||0)>(rec.gsT||0))){ const r=await gsPut('ride_'+id+'.json',rec,f&&f.id); await hTx('readwrite',st=>st.put({...rec,gsT:Date.now(),gsM:r.modifiedTime})); nUp++; }
       else if(f.modifiedTime!==rec.gsM&&rec.gsM){ const rm=await gsGet(f.id); await hTx('readwrite',st=>st.put({...rm,gsT:Date.now(),gsM:f.modifiedTime})); nDown++; }
       else if(!rec.gsM){ await hTx('readwrite',st=>st.put({...rec,gsT:Date.now(),gsM:f.modifiedTime})); } }
-    for(const f of files){ const m=/^ride_(.+)\.json$/.exec(f.name); if(!m||local[m[1]]||tomb[m[1]]||!byName[f.name]) continue; const rm=await gsGet(f.id); if(!rm||!rm.id) continue; if(rm.pid&&pmap[rm.pid]&&pmap[rm.pid].sync!==true){ await gsApi('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE'}); continue; } await hTx('readwrite',st=>st.put({...rm,gsT:Date.now(),gsM:f.modifiedTime})); nDown++; }
-    // first connection on this device: take the rider's synced profile, or create it from what is typed in
-    if(GS.fresh!=null){ const i=GS.fresh; GS.fresh=null; const rr=R[i]; if(rr&&!(profList().some(p=>p.id===rr.profileId))){ const first=profList().find(p=>p.sync===true); if(first){ chooseProfile(i,first.id); toast('Loaded your synced profile “'+first.name+'”. Change it in the Profile list if that is not you.',6000); } else { profCreate(i,true); gsSoon(); } } }
-    GS.last=Date.now(); store.set('sr_glast',GS.last); GS.err=false; GS.msg=''; dlog('sync','Done: sent '+nUp+', received '+nDown+', profiles now '+profList().length);
+    for(const f of files){ const m=/^ride_(.+)\.json$/.exec(f.name); if(!m||local[m[1]]||tomb[m[1]]||!byName[f.name]) continue; const rm=await gsGet(f.id); if(!rm||!rm.id) continue; if(rm.pid&&pmap[rm.pid]&&pmap[rm.pid].sync!==true){ await gsApi('https://www.googleapis.com/drive/v3/files/'+f.id,{method:'DELETE'}); continue; } if(rm.pid&&!pmap[rm.pid]&&locOther.some(o=>o.id===rm.pid)) continue; await hTx('readwrite',st=>st.put({...rm,gsT:Date.now(),gsM:f.modifiedTime})); nDown++; }
+    // profiles that were switched off are now scrubbed from this account: let go of the link
+    { const fin=profAll(); let ch=false; fin.forEach(p=>{ if(p.acct===a&&p.sync===false){ delete p.acct; ch=true; } }); if(ch) profSave(fin); }
+    // first connection on this device: take this account's profile, or create it from what is typed in
+    if(GS.fresh!=null){ const i=GS.fresh; GS.fresh=null; const rr=R[i]; if(rr&&!(profList().some(p=>p.id===rr.profileId))){ const first=profList().find(p=>p.sync===true&&p.acct===a); if(first){ chooseProfile(i,first.id); toast('Loaded your synced profile “'+first.name+'”. Change it in the Profile list if that is not you.',6000); } else { const np=profCreate(i,true), a2=profAll(), q=a2.find(x=>x.id===np.id); q.acct=a; if(GS.pic) q.pic=GS.pic; profSave(a2); gsSoon(); } } }
+    GS.last=Date.now(); A.last=GS.last; store.set('sr_glast',GS.last); A.err=false; A.msg=''; dlog('sync',a+': done, sent '+nUp+', received '+nDown);
     if(nDown){ await loadHistMeta(); if(typeof histOn!=='undefined'&&histOn) refreshHist(); }
-    if(interactive) toast('Synced with Google · '+nUp+' sent, '+nDown+' received · Drive holds '+nRemoteRides+' rides, '+profList().length+' profile'+(profList().length===1?'':'s')+(nDown&&!nUp&&R.every(x=>!x.profileId)?'. Pick your profile in Profile ⚙.':''),6000);
-  }catch(e){ console.error(e); GS.err=true; const em=String(e.message||e); dlog('sync','ERROR '+em); if(interactive) toast('Google sync: '+em+(/403/.test(em)?' (is the Google Drive API enabled in your Google Cloud project?)':''),8000); GS.msg=em; }
-  GS.busy=false; gsUi();
+    if(interactive) toast('Synced with '+a+' · '+nUp+' sent, '+nDown+' received · Drive holds '+nRemoteRides+' rides',6000);
+  }catch(e){ console.error(e); A.err=true; const em=String(e.message||e); dlog('sync','ERROR '+em); if(interactive) toast('Google sync: '+em,8000); A.msg=em; if(!GS.tok) A.tok=null; }
 }
-function gsbClick(i,e){
-  const r=R[i];
+async function gsLinkProfile(i,email,A){
+  const p=gsProf(i), all=profAll();
+  const other=all.find(x=>!x.del&&x.sync===true&&x.acct===email&&(!p||x.id!==p.id));
+  if(other){ toast('“'+email+'” already syncs the profile “'+other.name+'”. Each Google account holds one profile: pick that profile in the list, or use a different Google account for this one.',9000); return false; }
+  if(p){ const q=all.find(x=>x.id===p.id); q.sync=true; q.acct=email; if(A&&A.pic) q.pic=A.pic; q.u=Date.now(); profSave(all); }
+  else GS.fresh=i;                                      // new device, no profile picked: look for yours in the account first
+  return true;
+}
+async function gsbClick(i,e){
   if(e&&e.shiftKey){ const v=prompt('Paste your Google OAuth client ID (ends in .apps.googleusercontent.com).',GS.cid||''); if(v!==null){ GS.cid=v.trim(); store.set('sr_gcid',GS.cid); } return; }
-  let p=gsProf(i);
+  const p=gsProf(i);
   if(GS.on&&p&&p.sync===true){                       // stop syncing this profile only
     const all=profAll(), q=all.find(x=>x.id===p.id); q.sync=false; q.u=Date.now(); profSave(all);
-    const lastOne=!profList().some(x=>x.sync===true);
-    gsUi(); (async()=>{ for(let k=0;k<30&&GS.busy;k++) await new Promise(ok=>setTimeout(ok,300)); await gsSync(false); if(lastOne){ GS.on=false; store.set('sr_gsync','0'); gsUi(); } })(); toast('“'+p.name+'” no longer syncs. Its copy in your Drive is being removed; it stays on this device.',5000); return;
+    gsUi(); for(let k=0;k<30&&GS.busy;k++) await new Promise(ok=>setTimeout(ok,300)); await gsSync(false);
+    if(!profAll().some(x=>!x.del&&(x.sync===true||(x.sync===false&&x.acct)))){ GS.on=false; store.set('sr_gsync','0'); }
+    gsUi(); toast('“'+p.name+'” no longer syncs. Its copy in Google Drive is removed the next time you are signed in; it stays on this device.',6000); return;
   }
   if(!/^https?:$/.test(location.protocol)){ toast('Google sign-in needs the app opened from a web address (https://…), not a local file.',7000); return; }
   if(!GS.cid){ const v=prompt('Paste your Google OAuth client ID (ends in .apps.googleusercontent.com).'); if(v===null) return; GS.cid=v.trim(); store.set('sr_gcid',GS.cid); if(!GS.cid) return; }
-  if(p){ const all=profAll(), q=all.find(x=>x.id===p.id); q.sync=true; if(GS.pic) q.pic=GS.pic; q.u=Date.now(); profSave(all); }
-  else if(GS.on){ profCreate(i,true); }
-  else GS.fresh=i;                                      // new device, no profile picked: look for yours in the account first
-  const first=!GS.on; GS.on=true; GS.err=false; store.set('sr_gsync','1'); gsUi(); gsSync(true);
-  if(first){ setInterval(()=>{ if(!document.hidden) gsSync(false); },300000); }
+  if(GS.busy) return; GS.busy=true; GS.cur=''; gsUi(); let email='';
+  try{ const s=await gsSignIn(''); email=s.email; GS.busy=false; if(!await gsLinkProfile(i,email,s.A)){ email=''; } }
+  catch(err){ toast('Google sync: '+(err&&err.message||err),8000); }
+  GS.busy=false;
+  if(email){ const first=!GS.on; GS.on=true; store.set('sr_gsync','1'); gsUi(); await gsSync(true,email); if(first){ setInterval(()=>{ if(!document.hidden) gsSync(false); },300000); } }
+  gsUi();
 }
 R.forEach(r=>{ $('gsb'+r.i).onclick=e=>gsbClick(r.i,e); });
-$('rhead0')&&R.forEach(r=>{ const h=$('rhead'+r.i); if(!h) return; h.style.cursor='pointer'; h.addEventListener('click',e=>{ if(!e.target.closest('.av')) return; e.stopPropagation();
+$('rhead0')&&R.forEach(r=>{ const h=$('rhead'+r.i); if(!h) return; h.style.cursor='pointer'; h.addEventListener('click',async e=>{ if(!e.target.closest('.av')) return; e.stopPropagation();
   if(GS.busy) return;
-  if(gsOnFor(r.i)){ if(!GS.tok||Date.now()>=GS.exp-60000||GS.err){ toast('Signing back in to Google…',2500); gsSync(true); } else { toast('Syncing…',1500); gsSync(true); } }
-  else toast('Turn on Sync for this profile in Profile ⚙ to keep it backed up and signed in.',4500); }); });
+  const p=gsProf(r.i);
+  if(!(GS.on&&p&&p.sync===true)){ toast('Turn on Sync for this profile in Profile ⚙ to keep it backed up and signed in.',4500); return; }
+  if(!p.acct){                                         // synced before accounts were remembered: sign in once to link it
+    toast('Signing in to Google…',2500); GS.busy=true; GS.cur=''; gsUi(); let email='';
+    try{ const s=await gsSignIn(''); email=s.email; GS.busy=false; if(!await gsLinkProfile(r.i,email,s.A)) email=''; }catch(err){ toast('Google sync: '+(err&&err.message||err),8000); }
+    GS.busy=false; gsUi(); if(email) gsSync(true,email); return; }
+  const A=gsAcct(p.acct); toast(gsValid(A)?'Syncing…':'Signing back in to Google…',2500); gsSync(true,p.acct); }); });
 gsUi();
 if(GS.on&&!store.get('sr_gmig16')){ store.set('sr_gmig16','1'); const all=profAll(), mine=store.get('sr_prof0'); all.forEach(p=>{ if(p.sync===undefined&&!p.del){ p.sync=(p.id===mine); p.u=Date.now(); } }); profSave(all); }
 if(GS.on&&GS.cid){ setTimeout(()=>gsSync(false),2500); setInterval(()=>{ if(!document.hidden) gsSync(false); },300000); document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&Date.now()-GS.last>60000) gsSync(false); }); }
@@ -3954,7 +4012,7 @@ async function mergeSameNameProfiles(){
   const remap={};
   dups.forEach(g=>{ g.sort((x,y)=>x.id<y.id?-1:1); const w=g[0], nw=g.slice().sort((x,y)=>(y.u||0)-(x.u||0))[0];
     Object.assign(w,{gear:nw.gear,mass:nw.mass,ftp:nw.ftp,u:Date.now()});
-    if(g.some(p=>p.sync===true)) w.sync=true; if(!w.pic){ const pp=g.find(p=>p.pic); if(pp) w.pic=pp.pic; }
+    if(g.some(p=>p.sync===true)) w.sync=true; if(!w.acct){ const pa=g.find(p=>p.acct); if(pa) w.acct=pa.acct; } if(!w.pic){ const pp=g.find(p=>p.pic); if(pp) w.pic=pp.pic; }
     g.slice(1).forEach(p=>{ remap[p.id]=w.id; p.del=true; p.alias=w.id; p.u=Date.now(); }); });
   profSave(all);
   const recs=await hTx('readonly',st=>st.getAll())||[]; let moved=0;
