@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.29 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.35 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -69,7 +69,7 @@
   #botGrad{position:absolute;left:0;right:0;bottom:0;height:min(36%,300px);z-index:5;pointer-events:none;background:linear-gradient(to top,rgba(8,3,2,.72) 0%,rgba(8,3,2,.46) 38%,rgba(8,3,2,.16) 72%,rgba(8,3,2,0) 100%);}
   #profile{position:absolute;left:0;right:0;bottom:22px;height:92px;width:100%;background:none;display:block;cursor:pointer;z-index:8;}
   #panel{position:absolute;top:8px;right:8px;width:330px;max-height:calc(100% - 165px);overflow:auto;background:rgba(40,18,12,.95);border:1px solid var(--line);border-radius:14px;padding:12px;z-index:10;font-size:13px;}
-  #panel.collapsed > :not(#phead){display:none;}
+  #panel.collapsed > :not(#phead):not(#grip){display:none;}
   body.hasmini #panel{max-height:calc(100% - 372px);}
   #panel.compact{width:210px;max-height:none;overflow:visible;}
   #panel.compact > :not(#phead):not(.ctl4):not(#grip){display:none;}
@@ -412,7 +412,8 @@
   #grip{display:none;position:sticky;bottom:-10px;margin:6px -10px -10px;height:24px;flex-direction:column;align-items:center;justify-content:center;gap:4px;touch-action:none;cursor:grab;-webkit-tap-highlight-color:transparent;border-radius:0 0 14px 14px;background:linear-gradient(to bottom,rgba(40,18,12,0),rgba(40,18,12,.95) 55%);}
   #grip i{display:block;width:30px;height:2.5px;border-radius:2px;background:rgba(255,230,215,.55);}
   #grip.drag i{background:rgba(255,230,215,.95);}
-  body.phone #grip{display:flex;}
+  #grip{display:flex;}
+  @media (pointer:fine){ #grip{height:14px;gap:3px;bottom:-12px;margin:2px -12px -12px;} #grip i{width:24px;height:2px;} body #panel.collapsed #grip{height:12px;margin:0 -5px;} }
   body.phone #panel.compact #ptitle{display:none;}
   body.phone #panel.compact #phead{justify-content:flex-end;}
   body.phone #stage{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);}
@@ -480,7 +481,11 @@
   body #panel.collapsed #ptitle,body #panel.collapsed #btnFs{display:none;}
   #panel.collapsed #phead{margin:0;}
   #panel.collapsed #toggle{background:rgba(40,18,12,.85);border:1px solid var(--line);border-radius:10px;padding:8px 14px;}
-  body.phone:has(#panel.collapsed) #mini,body.phone:has(#panel.collapsed) #miniShow{top:44px;}
+  body.phone:has(#panel.collapsed) #mini,body.phone:has(#panel.collapsed) #miniShow{top:74px;}
+  body #panel.collapsed{background:rgba(40,18,12,.95);border:1px solid var(--line);border-radius:14px;padding:5px 5px 0;}
+  body #panel.collapsed #phead{border:0;background:none;padding:0;margin:0;}
+  body #panel.collapsed #toggle{background:none;border:0;padding:6px 12px;}
+  body #panel.collapsed #grip{position:static;margin:0 -5px;height:20px;}
 </style>
 </head>
 <body>
@@ -492,7 +497,7 @@
 <button id="miniShow">🗺 map</button>
 
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.29</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.35</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
 
   <h3>Connect</h3>
   <div id="riderCtl"></div>
@@ -661,7 +666,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.29';
+const APP_VER='1.35';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -1620,7 +1625,7 @@ const mpDec=t=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(t.replac
 const peerOpen=P=>!!(P&&P.dc&&P.dc.readyState==='open');
 const openPeers=()=>Object.values(mp.peers).filter(peerOpen);
 const mpOpen=()=>openPeers().length>0;
-const mpStat=t=>{ $('mpStatus').textContent=t; };
+let _lastMs=''; const mpStat=t=>{ $('mpStatus').textContent=t; if(t!==_lastMs){ _lastMs=t; dlog('group',t); } };
 const MAXRIDERS=8;
 function waitIce(pc,ms=6000){ return new Promise(res=>{ if(pc.iceGatheringState==='complete') return res(); const f=()=>{ if(pc.iceGatheringState==='complete'){ pc.removeEventListener('icegatheringstatechange',f); res(); } }; pc.addEventListener('icegatheringstatechange',f); setTimeout(res,ms); }); }
 function mpStatus(){ const n=openPeers().length; mpStat(n?('Riding with '+openPeers().map(p=>p.name).join(', ')+'.'):(mp.sess?'Waiting for riders…':(gcSt.user?'Not connected.':'Not connected.'))); }
@@ -1630,12 +1635,14 @@ function peerNew(id,name,role){
   if(mp.peers[id]) peerClose(id);
   if(Object.keys(mp.peers).length>=MAXRIDERS-1) return null;
   const P={id,name:name||'Friend',role,pc:new RTCPeerConnection(RTC_CFG),dc:null,remote:null,made:Date.now()}; mp.peers[id]=P;
-  P.pc.onconnectionstatechange=()=>{ const st=P.pc.connectionState; if(st==='failed'){ mpStat('Could not link with '+P.name+' directly (a network may block it). The others stay connected.'); peerClose(id); } else if(st==='disconnected'||st==='closed'){ if(mp.peers[id]===P){ P.remote=null; mpStatus(); } } };
+  P.pc.oniceconnectionstatechange=()=>dlog('group','link with '+P.name+': ice '+P.pc.iceConnectionState);
+  P.pc.onicecandidateerror=e=>dlog('group','ICE error '+(e&&e.errorCode)+' '+(e&&e.errorText||''));
+  P.pc.onconnectionstatechange=()=>{ const st=P.pc.connectionState; dlog('group','link with '+P.name+': '+st); if(st==='failed'){ mpStat('Could not link with '+P.name+' directly (a network may block it). The others stay connected.'); peerClose(id); } else if(st==='disconnected'||st==='closed'){ if(mp.peers[id]===P){ P.remote=null; mpStatus(); } } };
   return P;
 }
 function peerWire(P,dc){
   P.dc=dc;
-  dc.onopen=()=>{ mpStatus(); say('Online: connected with '+P.name+'.'); clearInterval(mp.timer); mp.timer=setInterval(mpSendState,400); mpSendState(); if(mp.hosting&&S.route) mpSendRoute(P); if(mp.code===P&&P.role==='host'&&S.route) mpSendRoute(P); };
+  dc.onopen=()=>{ dlog('group','data channel open with '+P.name); mpStatus(); say('Online: connected with '+P.name+'.'); clearInterval(mp.timer); mp.timer=setInterval(mpSendState,400); mpSendState(); if(mp.hosting&&S.route) mpSendRoute(P); if(mp.code===P&&P.role==='host'&&S.route) mpSendRoute(P); };
   dc.onclose=()=>{ P.remote=null; mpStatus(); };
   dc.onmessage=e=>{ try{ mpGot(P,JSON.parse(e.data)); }catch(err){ console.warn('mp',err); } };
 }
@@ -1698,7 +1705,7 @@ async function mpGoCode(){
       if(o.t!=='o') throw new Error('That is not a host code.');
       const P=peerNew('code','Friend','guest'); mp.code=P; P.pc.ondatachannel=e=>peerWire(P,e.channel);
       await P.pc.setRemoteDescription({type:'offer',sdp:o.sdp});
-      await P.pc.setLocalDescription(await P.pc.createAnswer()); await waitIce(P.pc);
+      dlog('group','got a call from '+v.n); await P.pc.setLocalDescription(await P.pc.createAnswer()); await waitIce(P.pc); dlog('group','answer ready, candidates '+candTypes(P.pc.localDescription.sdp));
       $('mpOut').value=mpEnc({t:'a',sdp:P.pc.localDescription.sdp});
       $('mpOutLbl').textContent='2. Send this reply code back to the host:'; $('mpOutWrap').style.display='block'; $('mpInWrap').style.display='none';
       mpStat('Waiting for the host to paste your reply code.');
@@ -1731,7 +1738,7 @@ async function gcExchange(cred){
   const j=await r.json(); if(!r.ok||!j.idToken) throw new Error((j.error&&j.error.message)||'Sign-in failed');
   gcSt.tok=j.idToken; gcSt.exp=Date.now()+(+j.expiresIn||3600)*1000; gcSt.ref=j.refreshToken; store.set('sr_gref',gcSt.ref); gcSt.user=j.localId; gcSt.email=(j.email||'').toLowerCase(); store.set('sr_gemail',gcSt.email);
   if(j.photoUrl&&!GS.pic){ GS.pic=j.photoUrl; store.set('sr_gpic',GS.pic); gsUi(); }
-  gcUi(); gcStart();
+  dlog('group','signed in as '+gcSt.email); gcUi(); gcStart();
 }
 function gcUi(){
   const ready=gcReady(), on=!!gcSt.user;
@@ -1771,7 +1778,7 @@ async function gcHostToggle(){
     if(mp.hosting){ await gcStopHosting(); return; }
     if(mp.sess) await gcLeave();
     if(!await gcPublish()) return;
-    mp.hosting=true; mp.sess={host:me}; mp.joinT=Date.now(); mpStat('Hosting. Waiting for friends to join…'); gcUi();
+    dlog('group','hosting for '+mp.hostFriends.join(', ')); mp.hosting=true; mp.sess={host:me}; mp.joinT=Date.now(); mpStat('Hosting. Waiting for friends to join…'); gcUi();
     if(S.route) mpSendRoute();
   }catch(e){ mpStat('Host: '+e.message); }
 }
@@ -1789,23 +1796,25 @@ async function gcJoinToggle(hostKey){
   try{
     if(mp.sess&&mp.sess.host===hostKey&&!mp.hosting){ await gcLeave(); return; }
     if(mp.hosting) await gcStopHosting(); else if(mp.sess) await gcLeave();
-    const name=R[0].name||'Rider', me=gcKey(gcSt.email); mp.joinT=Date.now(); mp.sess={host:hostKey}; mp.tried={};
+    const name=R[0].name||'Rider', me=gcKey(gcSt.email); dlog('group','joining '+hostKey); mp.joinT=Date.now(); mp.sess={host:hostKey}; mp.tried={};
     await gcDb('sess/'+hostKey+'/members/'+me,'PUT',{name,j:mp.joinT,t:Date.now(),pic:picOf(R[0].profileId)||GS.pic||''});
     mpStat('Joining…'); gcUi(); gcTick();
   }catch(e){ mp.sess=null; mpStat('Join: '+e.message); gcUi(); }
 }
+const candTypes=sdp=>{ const m={}; (sdp.match(/typ (host|srflx|relay|prflx)/g)||[]).forEach(x=>{ x=x.slice(4); m[x]=(m[x]||0)+1; }); return JSON.stringify(m); };
 async function gcOffer(toKey,toName){
-  const P=peerNew(toKey,toName,'offer'); if(!P) return; P.pc.ondatachannel=e=>peerWire(P,e.channel); peerWire(P,P.pc.createDataChannel('sr'));
-  await P.pc.setLocalDescription(await P.pc.createOffer()); await waitIce(P.pc);
+  const P=peerNew(toKey,toName,'offer'); if(!P) return; dlog('group','calling '+toName); P.pc.ondatachannel=e=>peerWire(P,e.channel); peerWire(P,P.pc.createDataChannel('sr'));
+  await P.pc.setLocalDescription(await P.pc.createOffer()); await waitIce(P.pc); dlog('group','offer ready, candidates '+candTypes(P.pc.localDescription.sdp));
   await gcDb('sig/'+toKey+'/'+gcKey(gcSt.email),'PUT',{t:'o',sdp:P.pc.localDescription.sdp,n:R[0].name||'Rider',h:mp.sess&&mp.sess.host,at:Date.now()});
 }
 async function gcTick(){
   if(gcSt.busy||!gcSt.user||document.hidden&&!mp.sess) return; gcSt.busy=true;
   try{
-    const me=gcKey(gcSt.email);
-    gcSt.inv=(await gcDb('inv/'+me))||{}; gcChips();
+    const me=gcKey(gcSt.email); gcSt.fails=0;
+    { const iv=(await gcDb('inv/'+me))||{}; const n=Object.keys(iv).length; if(n!==gcSt._n){ gcSt._n=n; dlog('group','invites for me: '+n); } gcSt.inv=iv; } gcChips();
     if(mp.sess){
       const h=mp.sess.host, mem=(await gcDb('sess/'+h+'/members'))||{}, now=Date.now(); gcSt.members=mem; gcChips();
+      if(mp.sess&&!mp.hosting&&!openPeers().length&&mem[me]&&Object.keys(mp.peers).length) mpStat('Linking with the host…');
       if(!mem[me]){ if(!mp.hosting){ mp.sess=null; mpStat('The host ended the ride.'); gcUi(); } }
       else{
         if(now-gcSt.lastBeat>20000){ gcSt.lastBeat=now; gcDb('sess/'+h+'/members/'+me+'/t','PUT',now).catch(()=>{}); }
@@ -1826,11 +1835,11 @@ async function gcTick(){
           await gcDb('sig/'+from+'/'+me,'PUT',{t:'a',sdp:P.pc.localDescription.sdp,at:Date.now()}); }
         gcDb('sig/'+me+'/'+from,'DELETE').catch(()=>{});
       }else if(v.t==='a'){
-        const P=mp.peers[from]; if(P&&P.role==='offer'&&P.pc.signalingState==='have-local-offer'){ await P.pc.setRemoteDescription({type:'answer',sdp:v.sdp}); }
+        const P=mp.peers[from]; if(P&&P.role==='offer'&&P.pc.signalingState==='have-local-offer'){ dlog('group','got answer from '+P.name); await P.pc.setRemoteDescription({type:'answer',sdp:v.sdp}); }
         gcDb('sig/'+me+'/'+from,'DELETE').catch(()=>{});
       }
     }
-  }catch(e){ console.warn('lobby',e); if(!/expired/.test(e.message)) mpStat(e.message); }
+  }catch(e){ console.warn('lobby',e); dlog('group','lobby error: '+e.message); gcSt.fails=(gcSt.fails||0)+1; if(/fetch|network|load failed/i.test(e.message)){ if(gcSt.fails>=3) mpStat('No connection to the lobby, retrying…'); } else if(!/expired/.test(e.message)) mpStat(e.message); }
   gcSt.busy=false;
 }
 function gcStart(){ clearInterval(gcSt.timer); gcSt.timer=setInterval(gcTick,2500); gcTick(); }
@@ -1860,7 +1869,7 @@ $('gcFriends').value=store.get('sr_friends')||'';
 $('gcFriends').addEventListener('change',()=>{ store.set('sr_friends',$('gcFriends').value); gcChips(); if(mp.hosting) gcPublish().catch(()=>{}); });
 window.addEventListener('pagehide',()=>{ try{ if(mp.sess&&gcSt.tok){ const h=mp.sess.host, me=gcKey(gcSt.email); const u=gcCfg().dbUrl+'/sess/'+h+(mp.hosting?'':'/members/'+me)+'.json?auth='+encodeURIComponent(gcSt.tok); fetch(u,{method:'DELETE',keepalive:true}); } }catch(e){} });
 $('mpDet').addEventListener('toggle',()=>{ if($('mpDet').open) gcRenderBtn(); });
-(async()=>{ if(gcReady()&&gcSt.ref){ try{ await gcFresh(); const em=store.get('sr_gemail')||''; gcSt.email=em; const p=JSON.parse(atob(gcSt.tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); gcSt.user=p.user_id||p.sub; gcSt.email=(p.email||em).toLowerCase(); gcUi(); gcStart(); }catch(e){ gcUi(); } } else gcUi(); })();
+(async()=>{ if(gcReady()&&gcSt.ref){ try{ await gcFresh(); const em=store.get('sr_gemail')||''; gcSt.email=em; const p=JSON.parse(atob(gcSt.tok.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); gcSt.user=p.user_id||p.sub; gcSt.email=(p.email||em).toLowerCase(); dlog('group','restored sign-in as '+gcSt.email); gcUi(); gcStart(); }catch(e){ dlog('group','sign-in not restored: '+e.message); gcUi(); } } else { dlog('group',gcReady()?'not signed in to group rides':'group rides not set up'); gcUi(); } })();
 const RCOL=['#ffb020','#c07bff','#4fd1ff','#7dff8a','#ff7aa8','#ffe14f','#ff8a4f','#b0b8ff'];
 function remoteTick(dt){                       // glide each remote marker toward where that rider should be; never extrapolate a stopped rider
   for(const P of Object.values(mp.peers)){ const m=P.remote; if(!m) continue;
@@ -2174,7 +2183,7 @@ function ringApply(){
   R.forEach(rr=>{ const h=$('rhead'+rr.i), el=h&&h.querySelector('.av'); if(!el) return;
     const mine=gsOnFor(rr.i), st=!mine?'off':GS.busy?'busy':GS.err?'err':'ok';
     el.classList.remove('ring-ok','ring-busy','ring-err','ring-off'); el.classList.add('ring-'+st);
-    el.title=st==='off'?'Not syncing this profile':st==='busy'?'Syncing…':st==='err'?'Sync problem: '+(GS.msg||'tap the Sync button in Profile'):'Synced with Google'+(GS.last?' · '+new Date(GS.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''); });
+    el.title=st==='off'?'Not syncing this profile':st==='busy'?'Syncing…':st==='err'?(GS.msg==='Signed out'?'Signed out of Google · tap to sign in':'Sync problem: '+(GS.msg||'tap the Sync button in Profile')):'Synced with Google'+(GS.last?' · '+new Date(GS.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):''); });
 }
 const gsProf=i=>profList().find(p=>p.id===R[i].profileId);
 const gsOnFor=i=>{ const p=gsProf(i); return !!(GS.on&&p&&p.sync===true); };
@@ -2216,7 +2225,9 @@ const gsTombs=()=>{ try{ return JSON.parse(store.get('sr_gdel')||'{}'); }catch(e
 function gsTomb(ids){ const t=gsTombs(); ids.forEach(id=>{ t[id]=Date.now(); }); store.set('sr_gdel',JSON.stringify(t)); gsSoon(); }
 function gsSoon(){ if(!GS.on) return; clearTimeout(GS.timer); GS.timer=setTimeout(()=>gsSync(false),4000); }
 async function gsSync(interactive){
-  if(!GS.on||!GS.cid||GS.busy) return; GS.busy=true; gsUi();
+  if(!GS.on||!GS.cid||GS.busy) return;
+  if(!interactive&&!(GS.tok&&Date.now()<GS.exp-60000)){ if(!GS.err||GS.msg!=='Signed out'){ GS.err=true; GS.msg='Signed out'; dlog('sync','Signed out: waiting for a tap on your profile pic'); gsUi(); } return; }   // no silent pop-up: it never works on phones
+  GS.busy=true; gsUi();
   try{
     await gsToken(interactive);
     if(!GS.pic){ try{ const u=await (await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+GS.tok}})).json(); if(u&&u.picture){ GS.pic=u.picture; store.set('sr_gpic',GS.pic); gsUi(); } }catch(e){} }
@@ -2254,8 +2265,8 @@ async function gsSync(interactive){
     if(GS.fresh!=null){ const i=GS.fresh; GS.fresh=null; const rr=R[i]; if(rr&&!(profList().some(p=>p.id===rr.profileId))){ const first=profList().find(p=>p.sync===true); if(first){ chooseProfile(i,first.id); toast('Loaded your synced profile “'+first.name+'”. Change it in the Profile list if that is not you.',6000); } else { profCreate(i,true); gsSoon(); } } }
     GS.last=Date.now(); store.set('sr_glast',GS.last); GS.err=false; GS.msg=''; dlog('sync','Done: sent '+nUp+', received '+nDown+', profiles now '+profList().length);
     if(nDown){ await loadHistMeta(); if(typeof histOn!=='undefined'&&histOn) refreshHist(); }
-    if(interactive||nUp||nDown) toast('Synced with Google · '+nUp+' sent, '+nDown+' received · Drive holds '+nRemoteRides+' rides, '+profList().length+' profile'+(profList().length===1?'':'s')+(nDown&&!nUp&&R.every(x=>!x.profileId)?'. Pick your profile in Profile ⚙.':''),6000);
-  }catch(e){ console.error(e); GS.err=true; const em=String(e.message||e); dlog('sync','ERROR '+em); if(interactive||GS.msg!==em) toast('Google sync: '+em+(/403/.test(em)?' (is the Google Drive API enabled in your Google Cloud project?)':''),8000); GS.msg=em; }
+    if(interactive) toast('Synced with Google · '+nUp+' sent, '+nDown+' received · Drive holds '+nRemoteRides+' rides, '+profList().length+' profile'+(profList().length===1?'':'s')+(nDown&&!nUp&&R.every(x=>!x.profileId)?'. Pick your profile in Profile ⚙.':''),6000);
+  }catch(e){ console.error(e); GS.err=true; const em=String(e.message||e); dlog('sync','ERROR '+em); if(interactive) toast('Google sync: '+em+(/403/.test(em)?' (is the Google Drive API enabled in your Google Cloud project?)':''),8000); GS.msg=em; }
   GS.busy=false; gsUi();
 }
 function gsbClick(i,e){
@@ -4044,7 +4055,7 @@ setTimeout(async()=>{
     const end=e=>{ if(y0==null) return; const dy=e.clientY-y0; y0=null; el.classList.remove('drag'); onEnd(dy); };
     if(cap){ el.addEventListener('pointerup',end); el.addEventListener('pointercancel',()=>{ y0=null; el.classList.remove('drag'); }); }
     else { addEventListener('pointerup',end); addEventListener('pointercancel',()=>{ y0=null; }); } }   // no pointer capture here, so buttons inside still get their clicks
-  wire(g,dy=>{ if(dy<-18) setCollapsed(true); },true);
+  wire(g,dy=>{ const col=p.classList.contains('collapsed'); if(dy<-18&&!col) setCollapsed(true); else if(dy>18&&col) setCollapsed(false); else if(Math.abs(dy)<=6) setCollapsed(!col); },true);
   const ph=$('phead'); if(ph) wire(ph,dy=>{ if(dy>18&&p.classList.contains('collapsed')) setCollapsed(false); },false);
 })();
 $('ftpFs').onclick=toggleFs; showFsMode();
