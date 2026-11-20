@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Street-Ride v1.21 · ride real streets on your smart trainer · by Natange -->
+<!-- Street-Ride v1.25 · ride real streets on your smart trainer · by Natange -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -7,7 +7,7 @@
 <meta name="author" content="Natange">
 <meta name="theme-color" content="#3a1c13">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2064%2064%27%3E%3Crect%20width%3D%2764%27%20height%3D%2764%27%20rx%3D%2714%27%20fill%3D%27%239d5b4e%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%2734%27%20r%3D%2715%27%20fill%3D%27none%27%20stroke%3D%27%23f7ead9%27%20stroke-width%3D%275%27/%3E%3Ccircle%20cx%3D%2732%27%20cy%3D%2734%27%20r%3D%273.5%27%20fill%3D%27%23f7ead9%27/%3E%3Cpath%20d%3D%27M32%2034%20L32%2019%20M32%2034%20L45%2041%20M32%2034%20L19%2041%27%20stroke%3D%27%23f7ead9%27%20stroke-width%3D%272.5%27/%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
@@ -103,6 +103,8 @@
   .av img{width:100%;height:100%;object-fit:cover;display:block;}
   .pin{width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-sizing:border-box;background:#2a1a14;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font:700 12px system-ui;box-shadow:0 0 0 1px rgba(0,0,0,.4);}
   .pin img{width:100%;height:100%;object-fit:cover;display:block;}
+  .pcell{display:inline-flex;align-items:center;gap:6px;}
+  button.icob.tr{padding:5px 7px;line-height:0;height:28px;}
   .rgrid select{width:100%;min-width:0;box-sizing:border-box;margin:0;}
   .rgrid .span2{grid-column:2 / 4;}
   .gsb{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 8px;border-radius:13px;border:1px solid var(--line-2);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap;}
@@ -480,7 +482,7 @@
 <button id="miniShow">🗺 map</button>
 
 <div id="panel">
-  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.21</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
+  <div id="phead"><b id="ptitle" title="Click to copy the share link" style="cursor:pointer">Street-Ride <span style="opacity:.6;font-weight:400">v1.25</span></b><span style="flex:1"></span><button id="btnFs" title="Full screen">⛶</button><button id="toggle">hide</button></div>
 
   <h3>Connect</h3>
   <div id="riderCtl"></div>
@@ -649,7 +651,7 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.min.js"></script>
 <script>
 const APP_SRC='<!doctype html>\n'+document.documentElement.outerHTML;
-const APP_VER='1.21';
+const APP_VER='1.25';
 const $ = id => document.getElementById(id);
 /* ---------- debug log ---------- */
 const DBG={lines:[],t0:Date.now(),max:700};
@@ -767,9 +769,9 @@ for(let i=0;i<2;i++){
   if(i===1) rc.style.display='none';
   rc.innerHTML=`<div class="rhrow"><b id="rhead${i}">Rider ${i+1}</b><button class="lnk" id="profTog${i}" aria-expanded="false" title="Name, gear, weight, FTP and saved profile">Profile <svg class="burg" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.7 7.7 0 0 0 0-2l2.1-1.6a.5.5 0 0 0 .1-.6l-2-3.5a.5.5 0 0 0-.6-.2l-2.5 1a7.3 7.3 0 0 0-1.7-1l-.4-2.6a.5.5 0 0 0-.5-.4h-4a.5.5 0 0 0-.5.4l-.4 2.6a7.3 7.3 0 0 0-1.7 1l-2.5-1a.5.5 0 0 0-.6.2l-2 3.5a.5.5 0 0 0 .1.6L4.6 11a7.7 7.7 0 0 0 0 2l-2.1 1.6a.5.5 0 0 0-.1.6l2 3.5c.1.2.4.3.6.2l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.3 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5a.5.5 0 0 0-.1-.6L19.4 13zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg></button></div>
     <div class="rset" id="rset${i}" hidden>
-      <div class="hint" id="profHint${i}" style="display:flex;justify-content:space-between;min-height:0"><span id="profNote${i}"></span><button class="lnk" id="profDel${i}" title="Delete this profile" style="visibility:hidden">delete profile</button></div>
+      <div class="hint" id="profHint${i}" style="display:flex;justify-content:space-between;min-height:0"><span id="profNote${i}"></span></div>
       <div class="rgrid">
-        <label for="prof${i}" id="profLbl${i}">Profile</label><select id="prof${i}"></select><button class="gsb" id="gsb${i}" type="button" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.1.9-4.6l-7.9-6.2A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg><span>Sync</span></button>
+        <label for="prof${i}" id="profLbl${i}">Profile</label><select id="prof${i}"></select><span class="pcell"><button class="gsb" id="gsb${i}" type="button" aria-pressed="false"><svg width="14" height="14" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.2C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.1.9-4.6l-7.9-6.2A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.2C6.5 42.6 14.6 48 24 48z"/></svg><span>Sync</span></button><button class="icob tr" id="profDel${i}" type="button" title="Delete this profile (your saved rides stay in the history)" aria-label="Delete profile" style="visibility:hidden"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v5M14 11v5"/></svg></button></span>
         <label for="rname${i}">Name</label><input type="text" id="rname${i}" value="Rider ${i+1}" maxlength="20"><span></span>
         <label for="ftp${i}">FTP</label><input type="number" id="ftp${i}" value="200" min="50" max="600"><span class="un">W <button class="lnk" id="ftpGo${i}" title="Run a ramp test to find your FTP">test</button></span>
         <label for="ergW${i}" title="Power the ERG button holds, in watts">ERG</label><input type="number" id="ergW${i}" value="120" min="30" max="600" title="Power the ERG button holds, in watts"><span class="un">W</span>
@@ -940,7 +942,7 @@ const polyLen=raw=>{let L=0;for(let i=1;i<raw.length;i++)L+=hav(raw[i-1],raw[i])
 const offsetPt=(P,brg,m)=>{const b=rad(brg);return {lat:P.lat+m*Math.cos(b)/110540,lng:P.lng+m*Math.sin(b)/(111320*Math.cos(rad(P.lat)))};};
 const diffLabel=g=>g<7?'easy':g<15?'moderate':'hard';
 
-function replaceOk(){ return !R.slice(0,S.n).some(r=>r.dirty)||confirm('Your current ride has not been saved yet. Loading another route will discard it. Press Finish first to save it. Continue anyway?'); }
+function replaceOk(){ if(!R.slice(0,S.n).some(r=>r.dirty)) return true; if(confirm('Your current ride has not been saved yet. Loading another route will discard it. Press Finish first to save it. Continue anyway?')){ try{ draftDel(); }catch(e){} return true; } return false; }
 async function buildRoute(){
   if(!replaceOk()) return;
   const tokV=$('token').value.trim();
@@ -3273,7 +3275,7 @@ function stopRide(){
   if(!act.length){ say('Nothing recorded yet. Ride a bit first, then press Finish.'); return; }
   S.playing=false; syncPlayBtn(); setCompact(false); autoExitFs();
   act.forEach(r=>{ r.pname=(profList().find(p=>p.id===r.profileId)||{}).name||null; });
-  act.forEach(saveHistory); setTimeout(gsSoon,1500);
+  Promise.all(act.map(saveHistory)).then(()=>draftDel()).catch(()=>{}); setTimeout(gsSoon,1500);
   openSummary(act);
 }
 function zoneSecs(samples,ftp){ const z=ZONES.map(()=>0); (samples||[]).forEach(x=>{ if(x.pwr==null||!isFinite(x.pwr)) return; z[ZONES.indexOf(zoneOf(x.pwr/ftp*100))]++; }); return z; }
@@ -3923,18 +3925,22 @@ $('bkMerge').onclick=()=>mergeSameNameProfiles().catch(e=>{ $('bkMsg').textConte
     bike:P('<circle cx="6" cy="16" r="3.5"/><circle cx="18" cy="16" r="3.5"/><path d="M6 16l4-8h5l3 8M10 8l3 8M9 6h3"/>'),
     pin:P('<path d="M12 21s-6-6-6-11a6 6 0 0 1 12 0c0 5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>'),
     star:P('<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',1),
+    play:P('<path d="M7 4.5v15l12-7.5z"/>',1),
+    pause:P('<rect x="6" y="4.5" width="4.2" height="15" rx="1"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1"/>',1),
+    stop:P('<rect x="5.5" y="5.5" width="13" height="13" rx="2"/>',1),
+    skip:P('<path d="M5 5v14l9-7z"/><path d="M17 5v14"/>',1),
     sat:P('<path d="M9 5l10 10-4 4L5 9z"/><path d="M3 13a8 8 0 0 0 8 8M3 9a12 12 0 0 1 12 12"/>')
   };
-  const MAP={'\u{1F5FA}':'map','\u{1F3B2}':'dice','\u{1F558}':'clock','\u{1F517}':'link','\u{1F4C8}':'chart','\u{1F6B4}':'bike','\u{1F4CD}':'pin','⭐':'star','\u{1F6F0}':'sat'};
-  const TEST=/[\u{1F5FA}\u{1F3B2}\u{1F558}\u{1F517}\u{1F4C8}\u{1F6B4}\u{1F4CD}⭐\u{1F6F0}]|[▶♥⏸⏹⏭⬇⬆⚠⚡⚙✔★](?!︎)/u;
-  const SPLIT=/([\u{1F5FA}\u{1F3B2}\u{1F558}\u{1F517}\u{1F4C8}\u{1F6B4}\u{1F4CD}⭐\u{1F6F0}]️?)/u;
+  const MAP={'\u{1F5FA}':'map','\u{1F3B2}':'dice','\u{1F558}':'clock','\u{1F517}':'link','\u{1F4C8}':'chart','\u{1F6B4}':'bike','\u{1F4CD}':'pin','\u2B50':'star','\u{1F6F0}':'sat','\u25B6':'play','\u23F8':'pause','\u275A\u275A':'pause','\u23F9':'stop','\u25A0':'stop','\u23ED':'skip'};
+  const TEST=/[\u{1F5FA}\u{1F3B2}\u{1F558}\u{1F517}\u{1F4C8}\u{1F6B4}\u{1F4CD}\u2B50\u{1F6F0}\u25B6\u23F8\u275A\u23F9\u25A0\u23ED]|[\u2665\u2B07\u2B06\u26A0\u26A1\u2699\u2714\u2605](?!\uFE0E)/u;
+  const SPLIT=/(\u275A\u275A|[\u{1F5FA}\u{1F3B2}\u{1F558}\u{1F517}\u{1F4C8}\u{1F6B4}\u{1F4CD}\u2B50\u{1F6F0}\u25B6\u23F8\u23F9\u25A0\u23ED][\uFE0E\uFE0F]?)/u;
   function fix(t){
     const v=t.nodeValue; if(!v||!TEST.test(v)) return;
-    const txt=v.replace(/([▶♥⏸⏹⏭⬇⬆⚠⚡⚙✔★])(?!︎)/gu,'$1︎');
+    const txt=v.replace(/([\u2665\u2B07\u2B06\u26A0\u26A1\u2699\u2714\u2605])(?!\uFE0E)/gu,'$1\uFE0E');
     const parts=txt.split(SPLIT);
     if(parts.length===1){ if(txt!==v) t.nodeValue=txt; return; }
     const fr=document.createDocumentFragment();
-    parts.forEach(p=>{ const k=MAP[p.replace('️','')]; if(k){ const i=document.createElement('i'); i.className='ic'; i.dataset.i=k; i.style.setProperty('--m','url("data:image/svg+xml,'+encodeURIComponent(IC[k])+'")'); fr.appendChild(i); } else if(p) fr.appendChild(document.createTextNode(p)); });
+    parts.forEach(p=>{ const k=MAP[p.replace(/[\uFE0E\uFE0F]/g,'')]; if(k){ const i=document.createElement('i'); i.className='ic'; i.dataset.i=k; i.style.setProperty('--m','url("data:image/svg+xml,'+encodeURIComponent(IC[k])+'")'); fr.appendChild(i); } else if(p) fr.appendChild(document.createTextNode(p)); });
     t.parentNode.replaceChild(fr,t);
   }
   function walk(n){
@@ -3944,6 +3950,68 @@ $('bkMerge').onclick=()=>mergeSameNameProfiles().catch(e=>{ $('bkMsg').textConte
   }
   walk(document.body);
   new MutationObserver(ms=>{ for(const m of ms){ if(m.type==='characterData') walk(m.target); else m.addedNodes.forEach(walk); } }).observe(document.body,{subtree:true,childList:true,characterData:true});
+})();
+
+/* ---------- back button + ride autosave ---------- */
+const DRAFT={db:null,n:0};
+function draftDb(){ return new Promise((ok,no)=>{ if(DRAFT.db) return ok(DRAFT.db); const q=indexedDB.open('street-ryde-draft',1); q.onupgradeneeded=()=>q.result.createObjectStore('d'); q.onsuccess=()=>{ DRAFT.db=q.result; ok(q.result); }; q.onerror=()=>no(q.error); }); }
+async function draftPut(v){ const db=await draftDb(); return new Promise((ok,no)=>{ const tx=db.transaction('d','readwrite'); tx.objectStore('d').put(v,'cur'); tx.oncomplete=ok; tx.onerror=()=>no(tx.error); }); }
+async function draftGet(){ const db=await draftDb(); return new Promise((ok,no)=>{ const q=db.transaction('d','readonly').objectStore('d').get('cur'); q.onsuccess=()=>ok(q.result); q.onerror=()=>no(q.error); }); }
+async function draftDel(){ DRAFT.n=0; try{ const db=await draftDb(); await new Promise((ok,no)=>{ const tx=db.transaction('d','readwrite'); tx.objectStore('d').delete('cur'); tx.oncomplete=ok; tx.onerror=()=>no(tx.error); }); }catch(e){} }
+function draftSnap(){
+  const act=R.slice(0,S.n).filter(r=>r.dirty&&r.samples.length); if(!act.length||!S.route) return null; const P=S.route;
+  return {t:Date.now(),n:S.n,route:{raw:P.pts.map(p=>[+p.lat.toFixed(6),+p.lng.toFixed(6),Math.round(p.ele*10)/10]),cam:P.cam||null},riders:R.slice(0,S.n).map(r=>({i:r.i,name:r.name,profileId:r.profileId||null,startWall:r.startWall,pos:r.pos,pSum:r.pSum,pCnt:r.pCnt,samples:r.dirty?r.samples.slice():[]}))};
+}
+async function draftSave(force){
+  const tot=R.slice(0,S.n).reduce((a,r)=>a+(r.dirty?r.samples.length:0),0); if(!tot||(!force&&tot===DRAFT.n)) return;
+  const d=draftSnap(); if(!d) return; DRAFT.n=tot; try{ await draftPut(d); }catch(e){ DRAFT.n=0; }
+}
+setInterval(()=>draftSave(false),15000);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) draftSave(true); });
+addEventListener('pagehide',()=>draftSave(true));
+async function draftRecover(d){
+  try{
+    if(d.n===2&&S.n!==2) setPlayers(2);
+    await finalizeRoute(d.route.raw.map(q=>({lat:q[0],lng:q[1],ele:q[2]})),d.route.cam||null,'Recovered ride. ',t=>say(t),()=>{},!!d.route.cam);
+    d.riders.forEach(x=>{ const r=R[x.i]; if(!r||!x.samples.length) return; r.samples=x.samples; r.pos=x.pos; r.pSum=x.pSum; r.pCnt=x.pCnt; r.startWall=x.startWall; r.name=x.name||r.name; r.profileId=x.profileId; r.dirty=true; });
+    const act=R.slice(0,S.n).filter(r=>r.samples.length); if(!act.length) return;
+    act.forEach(r=>{ r.pname=(profList().find(p=>p.id===r.profileId)||{}).name||null; });
+    await Promise.all(act.map(saveHistory)); await draftDel(); setTimeout(gsSoon,1500); openSummary(act);
+  }catch(e){ say('Could not recover the ride: '+e.message); }
+}
+setTimeout(async()=>{
+  try{
+    if(S.playing||R.slice(0,S.n).some(r=>r.dirty)) return; const d=await draftGet(); if(!d) return;
+    const secs=Math.max(0,...d.riders.map(x=>x.samples.length)); if(secs<30){ await draftDel(); return; }
+    if(confirm('Street-Ride found a ride that was not finished ('+new Date(d.t).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+', about '+Math.max(1,Math.round(secs/60))+' min).\n\nOK saves it to your route history.\nCancel throws it away.')) await draftRecover(d); else await draftDel();
+  }catch(e){ console.warn('draft',e); }
+},2600);
+
+/* the phone's back button closes what is open first, asks before leaving a ride, and needs a second press to leave */
+(function(){
+  const shown=id=>{ const e=$(id); return e&&getComputedStyle(e).display!=='none'; };
+  function closeTop(){
+    if(shown('sum')){ $('btnCloseSum').click(); return true; }
+    if(shown('ftp')){ $('ftpBack').click(); return true; }
+    if(shown('setup')){ $('btnCloseSetup').click(); return true; }
+    if(typeof histOn!=='undefined'&&histOn){ setHist(false); return true; }
+    const p=$('panel'); if(S.playing&&!p.classList.contains('collapsed')){ $('toggle').click(); return true; }
+    return false;
+  }
+  let armed=false, last=0;
+  const arm=()=>{ if(armed) return; armed=true; try{ history.replaceState({sr:0},''); history.pushState({sr:1},''); }catch(e){} };
+  ['pointerdown','keydown','touchend'].forEach(ev=>addEventListener(ev,arm,{once:false,capture:true,passive:true}));
+  addEventListener('popstate',()=>{
+    if(!armed) return;
+    const again=()=>{ try{ history.pushState({sr:1},''); }catch(e){} };
+    if(closeTop()){ again(); return; }
+    if(R.slice(0,S.n).some(r=>r.dirty&&r.samples.length)){
+      if(!confirm('Leave the ride?\n\nIt is saved automatically, and Street-Ride will offer to restore it next time you open it.')){ again(); return; }
+      draftSave(true).then(()=>{ armed=false; history.back(); }); return;
+    }
+    if(Date.now()-last<2500){ armed=false; history.back(); return; }
+    last=Date.now(); toast('Press back again to leave Street-Ride',2200); again();
+  });
 })();
 $('ftpFs').onclick=toggleFs; showFsMode();
 document.addEventListener('fullscreenchange',()=>{
